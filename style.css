@@ -1,0 +1,28 @@
+:root{
+  --bg:#0b0c0d; --card:#121417; --muted:#9aa3ad; --text:#e7ecf0;
+  --primary:#4c83ff; --danger:#e15a5a; --border:#1f2329; --radius:14px; --shadow:0 8px 28px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text)}
+.shell{display:grid; place-items:center; padding:24px}
+.card{width:min(920px,96vw); background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px}
+.card-head{display:flex; justify-content:space-between; align-items:flex-end; gap:8px; margin-bottom:16px}
+.title{margin:0 0 6px 0; font-weight:600}
+.subtitle{margin:0 0 6px 0; font-weight:600; font-size:18px}
+.sep{border:none; border-top:1px solid var(--border); margin:16px 0}
+.vstack{display:flex; flex-direction:column}
+.row{display:flex; align-items:center}
+.row-between{display:flex; justify-content:space-between; align-items:center}
+.row-end{display:flex; justify-content:flex-end; align-items:center}
+.gap{gap:10px}
+.field{display:flex; flex-direction:column; gap:6px}
+.field input{height:40px; padding:0 12px; color:var(--text); background:#0e1012; border:1px solid var(--border); border-radius:10px; outline:none}
+.field input:focus{border-color:#3b67d6}
+.btn{height:40px; padding:0 14px; border-radius:10px; border:1px solid var(--border); background:#151920; color:var(--text); cursor:pointer}
+.btn:hover{filter:brightness(1.05)}
+.btn.primary{background:var(--primary); border-color:#3b67d6}
+.status{font-size:13px; color:var(--muted)}
+.muted{color:var(--muted)}
+.dialog{width:min(520px,92vw); border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:var(--radius); padding:20px}
+dialog::backdrop{background:rgba(0,0,0,.55)}
