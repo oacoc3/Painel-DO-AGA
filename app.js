@@ -174,7 +174,7 @@
         const { data, error } = await sb
           .from("processos").select("*")
           .ilike("nup", `%${q}%`)
-          .order("updated_at", { ascending: false })
+          .order("nup", { ascending: false })
           .limit(50);
 
         if (error) throw error;
