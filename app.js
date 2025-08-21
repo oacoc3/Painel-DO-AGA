@@ -67,7 +67,7 @@ async function wireLogin(sb){
     }
   });
 
-  const rform = document.getElementById("register-form");
+// removido
   const rmsg = document.getElementById("register-msg");
   rform?.addEventListener("submit", async (e) => {
     e.preventDefault();
