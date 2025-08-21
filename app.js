@@ -42,6 +42,11 @@
           if (user) hello.textContent = `Autenticado como ${user.email}`;
           else hello.textContent = "";
         }
+        // Se estiver na tela de login e já autenticado, siga para home
+        if (document.getElementById("login-form") && user) {
+          window.location.href = "home.html";
+          return;
+        }
         // Se a página tem recursos de home (busca/saída) e não há usuário, volte ao login
         if ((document.getElementById("search-nup-form") || document.getElementById("logout")) && !user) {
           window.location.href = "index.html";
@@ -55,7 +60,7 @@
     if (btnLogout) {
       btnLogout.addEventListener("click", async () => {
         try { await sb.auth.signOut(); } catch (_) {}
-        try { sessionStorage.clear(); localStorage.removeItem("sb:token"); } catch (_) {}
+        try { sessionStorage.clear(); } catch (_) {}
         window.location.href = "index.html";
       });
     }
