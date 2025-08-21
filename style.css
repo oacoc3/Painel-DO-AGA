@@ -26,3 +26,16 @@ body{margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-
 .muted{color:var(--muted)}
 .dialog{width:min(520px,92vw); border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:var(--radius); padding:20px}
 dialog::backdrop{background:rgba(0,0,0,.55)}
+
+/* === Ajustes solicitados: login centralizado e caixa mais compacta === */
+.login-page{
+  display:grid;
+  place-items:center;
+  min-height:100vh;
+  padding:24px;
+}
+#view-login .card{
+  width:min(520px, 92vw);
+}
+/* Rodapé (foot) para os dados de build */
+.foot{}
