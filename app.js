@@ -9,6 +9,31 @@
   const sb = window.sb;
 
   document.addEventListener("DOMContentLoaded", () => {
+    // Saudar usuário logado e habilitar botão Sair na home
+    (async () => {
+      try {
+        const { data: { user } } = await sb.auth.getUser();
+        const hello = document.getElementById("hello");
+        if (hello && user) {
+          hello.textContent = `Autenticado como ${user.email}`;
+        }
+      } catch(e){ /* ignore */ }
+      const btnLogout = document.getElementById("logout");
+      if (btnLogout) {
+        btnLogout.addEventListener("click", async () => {
+          try {
+            await sb.auth.signOut();
+          } catch(e) {
+            console.warn("Erro ao sair:", e);
+          } finally {
+            // Limpa possíveis caches locais e volta ao login
+            try { sessionStorage.clear(); localStorage.removeItem("sb-auth-token"); } catch(_){}
+            window.location.href = "index.html";
+          }
+        });
+      }
+    })();
+
     // Footer versão/build (mantém comportamento existente se houver #build-info)
     try {
       const el = document.getElementById("build-info");
