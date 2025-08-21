@@ -100,7 +100,7 @@
           // Consulta com filtro parcial (ILIKE) e limite para evitar sobrecarga
           const { data, error } = await sb
             .from("processos")
-            .select("nup,tipo,status,entrada_regional,prazo_saida_regional,saida_regional,modificado_por,updated_at")
+            .select("nup,tipo,entrada_regional,status")
             .ilike("nup", `%${q}%`)
             .order("updated_at", { ascending: false })
             .limit(50);
