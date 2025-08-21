@@ -1,14 +1,16 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Portal DO-AGA</title>
-  <link rel="stylesheet" href="style.css"/>
-  </head>
-<body class="login-page">
-  <main class="card">
-    <h1>Entrar</h1>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Painel DO-AGA</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="style.css">
+</head>
+<body class="shell" data-route="">
+  <!-- VIEW: LOGIN (mesmo markup do index.html original) -->
+  <section id="view-login" style="display:none;">
+    <main class="card">
+<h1>Entrar</h1>
     <p class="subtitle">Acesse com seu e-mail e senha.</p>
 
     <form id="login-form" class="vstack gap" autocomplete="on">
@@ -31,8 +33,41 @@
     </form>
 
     <!-- 🚫 Bloco de auto-registro removido -->
+    </main>
+  </section>
 
-  </main>
+  <!-- VIEW: HOME (mesmo markup do home.html original) -->
+  <section id="view-home" style="display:none;">
+    <main class="card">
+<header class="card-head row-between">
+      <div class="vstack">
+        <h1 class="title">Painel DO-AGA</h1>
+        <p class="status" id="hello"></p>
+      </div>
+      <div class="row-end">
+        <button class="btn" id="logout">Sair</button>
+      </div>
+    </header>
+
+    <!-- Busca por NUP -->
+    <section class="vstack gap" id="search-nup-box">
+      <form id="search-nup-form" class="vstack gap" autocomplete="off">
+        <label class="field">
+          <span>NUP</span>
+          <input type="text" id="search-nup" placeholder="Digite o NUP completo ou parcial" />
+        </label>
+        <div class="row-end">
+          <button class="btn primary" type="submit">Buscar</button>
+        </div>
+        <p id="search-nup-msg" class="status"></p>
+        <div id="search-nup-result" class="vstack gap"></div>
+      </form>
+    </section>
+    </main>
+  </section>
+
+  <!-- Rodapé com versão/build, alinhado à esquerda -->
+  <footer class="status"><span id="build-info" class="muted"></span></footer>
 
   <script>
     window.APP_ENV = {
@@ -42,9 +77,5 @@
   </script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script defer src="app.js"></script>
-
-  <footer>
-    <p id="build-info"></p>
-  </footer>
 </body>
 </html>

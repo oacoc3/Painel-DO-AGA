@@ -1,156 +1,231 @@
-/* app.js — login + busca NUP (Supabase); sem mudanças visuais */
+/* app.js — SPA com roteamento por hash (#/login, #/home), guardas Supabase
+   Mantém o mesmo layout e CSS; reaproveita os IDs e marcações originais. */
 (function () {
   const env = (window.APP_ENV || {});
-  if (!window.supabase) {
-    console.error("Biblioteca @supabase/supabase-js não carregada.");
-    return;
-  }
-  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
-    console.error("Credenciais do Supabase ausentes em window.APP_ENV.");
-    return;
-  }
-  // Cliente compartilhado
+  if (!window.supabase) { console.error("Biblioteca @supabase/supabase-js não carregada."); return; }
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) { console.error("Credenciais do Supabase ausentes em window.APP_ENV."); return; }
+
+  // Cliente Supabase compartilhado
   window.sb = window.sb || supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
   const sb = window.sb;
+  // Gerenciar fonte Inter como no projeto original:
+  // - home.html carregava o Google Fonts; index.html não.
+  function ensureInterFont(shouldHave) {
+    const id = "gf-inter";
+    const existing = document.getElementById(id);
+    if (shouldHave) {
+      if (!existing) {
+        const link = document.createElement("link");
+        link.id = id;
+        link.rel = "stylesheet";
+        link.href = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap";
+        document.head.appendChild(link);
+      }
+    } else {
+      ensureInterFont(true);
+      if (existing) existing.remove();
+    }
+  }
 
+
+  // Utilitário: definir info de build
   function setBuildInfo() {
-    const el = document.getElementById("build-info");
+    try {
+      const el = document.getElementById("build-info");
+      if (el) {
+        const now = new Date();
+        const ts = now.toISOString().slice(0,19).replace('T',' ');
+        el.textContent = `Build AGA • ${ts}`;
+      }
+    } catch (_) {}
+  }
+
+  // Util: helper para (re)adicionar event listener sem duplicar
+  function replaceAndBind(el, type, handler) {
     if (!el) return;
-    // Pequeno carimbo para depuração
-    const dt = new Date();
-    const stamp = dt.toISOString().replace('T',' ').substring(0,19);
-    el.textContent = `build ${stamp}`;
+    const clone = el.cloneNode(true);
+    el.parentNode.replaceChild(clone, el);
+    clone.addEventListener(type, handler);
+    return clone;
   }
 
-  // Aux: cria um elemento com classes
-  function el(tag, className, html) {
-    const e = document.createElement(tag);
-    if (className) e.className = className;
-    if (html != null) e.innerHTML = html;
-    return e;
+  // Views
+  const $loginView = () => document.getElementById("view-login");
+  const $homeView  = () => document.getElementById("view-home");
+  const $body = () => document.body;
+
+  async function getUser() {
+    try {
+      const { data: { user } } = await sb.auth.getUser();
+      return user || null;
+    } catch { return null; }
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  // Guardas de rota + renderização
+  async function render(route) {
     setBuildInfo();
 
-    // Estado de sessão (saudação + proteção da home)
-    (async () => {
-      try {
-        const { data: { user } } = await sb.auth.getUser();
-        const hello = document.getElementById("hello");
-        if (hello) {
-          if (user) hello.textContent = `Autenticado como ${user.email}`;
-          else hello.textContent = "";
-        }
-        // Se estiver na tela de login e já autenticado, siga para home
-        if (document.getElementById("login-form") && user) {
-          window.location.href = "home.html";
-          return;
-        }
-        // Se a página tem recursos de home (busca/saída) e não há usuário, volte ao login
-        if ((document.getElementById("search-nup-form") || document.getElementById("logout")) && !user) {
-          window.location.href = "index.html";
-          return;
-        }
-      } catch (_) { /* ignore */ }
-    })();
+    // Normalizar rota
+    route = route || (location.hash.replace(/^#/, '') || '/login');
+    if (route !== '/login' && route !== '/home') {
+      route = '/login';
+    }
 
-    // Sair
+    const user = await getUser();
+
+    // Guardas
+    if (route === '/home' && !user) {
+      route = '/login';
+      location.hash = '#/login';
+    }
+    if (route === '/login' && user) {
+      route = '/home';
+      location.hash = '#/home';
+    }
+
+    // Visibility das views
+    const show = (v) => v.style.display = '';
+    const hide = (v) => v.style.display = 'none';
+    if (route === '/login') {
+      ensureInterFont(false);
+      show($loginView()); hide($homeView());
+      $body().className = 'login-page';    // manter classe original da página de login
+      mountLogin();
+    } else {
+      ensureInterFont(true);
+      show($homeView()); hide($loginView());
+      $body().className = 'shell';         // manter classe original da home
+      mountHome(user);
+    }
+    document.body.setAttribute('data-route', route);
+  }
+
+  // Montagem da view de login (eventos)
+  function mountLogin() {
+    const hello = document.getElementById("hello");
+    // limpar mensagem cabeçalho se existir
+    if (hello) hello.textContent = "";
+
+    const form = document.getElementById("login-form");
+    if (!form) return;
+
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+    const msg = document.getElementById("login-msg");
+
+    replaceAndBind(form, "submit", async (e) => {
+      e.preventDefault();
+      msg && (msg.textContent = "");
+      const mail = (email?.value || "").trim();
+      const pass = (password?.value || "").trim();
+      if (!mail || !pass) {
+        msg && (msg.textContent = "Informe e-mail e senha.");
+        return;
+      }
+      try {
+        const { data, error } = await sb.auth.signInWithPassword({ email: mail, password: pass });
+        if (error) throw error;
+        location.hash = '#/home';
+      } catch (err) {
+        console.error("Falha no login:", err);
+        msg && (msg.textContent = "Falha no login. Verifique suas credenciais.");
+      }
+    });
+  }
+
+  // Montagem da view home (saudação, logout, busca NUP)
+  function mountHome(user) {
+    const hello = document.getElementById("hello");
+    if (hello) {
+      if (user) hello.textContent = `Autenticado como ${user.email}`;
+      else hello.textContent = "";
+    }
+
     const btnLogout = document.getElementById("logout");
     if (btnLogout) {
-      btnLogout.addEventListener("click", async () => {
-        try { await sb.auth.signOut(); } catch (_) {}
-        try { sessionStorage.clear(); } catch (_) {}
-        window.location.href = "index.html";
+      replaceAndBind(btnLogout, "click", async () => {
+        try { await sb.auth.signOut(); } catch(_) {}
+        try { sessionStorage.clear(); } catch(_) {}
+        location.hash = '#/login';
       });
     }
 
-    // Login
-    const loginForm = document.getElementById("login-form");
-    if (loginForm) {
-      const email = document.getElementById("email");
-      const password = document.getElementById("password");
-      const msg = document.getElementById("login-msg");
-      loginForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const mail = (email?.value || "").trim();
-        const pass = (password?.value || "");
-        if (!mail || !pass) {
-          if (msg) msg.textContent = "Informe e-mail e senha.";
-          return;
-        }
-        if (msg) msg.textContent = "Entrando...";
-        try {
-          const { error } = await sb.auth.signInWithPassword({ email: mail, password: pass });
-          if (error) throw error;
-          window.location.href = "home.html";
-        } catch (err) {
-          console.warn("Falha no login:", err);
-          if (msg) msg.textContent = "Falha no login. Verifique suas credenciais.";
-        }
-      });
-    }
-
-    // Buscar NUP
+    // Busca por NUP (tabela 'processos')
     const searchForm = document.getElementById("search-nup-form");
-    if (searchForm) {
-      const input = document.getElementById("search-nup");
-      const msg = document.getElementById("search-nup-msg");
-      const resultBox = document.getElementById("search-nup-result");
+    if (!searchForm) return;
+    const input = document.getElementById("search-nup");
+    const msg = document.getElementById("search-nup-msg");
+    const resultBox = document.getElementById("search-nup-result");
 
-      async function runSearch(q) {
-        resultBox.innerHTML = "";
-        if (msg) msg.textContent = "Buscando...";
-        try {
-          // Consulta com filtro parcial (ILIKE) e limite para evitar sobrecarga
-          const { data, error } = await sb
-            .from("processos")
-            .select("nup,tipo,entrada_regional,status")
-            .ilike("nup", `%${q}%`)
-            .order("nup", { ascending: false })
-            .limit(50);
+    const el = (tag, className, text) => {
+      const x = document.createElement(tag);
+      if (className) x.className = className;
+      if (text != null) x.textContent = text;
+      return x;
+    };
 
-          if (error) throw error;
+    async function runSearch(q) {
+      msg && (msg.textContent = "");
+      resultBox && (resultBox.innerHTML = "");
 
-          if (!data || data.length === 0) {
-            if (msg) msg.textContent = "Nenhum processo encontrado.";
-            return;
-          }
-          if (msg) msg.textContent = `${data.length} registro(s) encontrado(s).`;
+      try {
+        const { data, error } = await sb
+          .from("processos")
+          .select("*")
+          .ilike("nup", `%${q}%`)
+          .order("updated_at", { ascending: false })
+          .limit(50);
 
-          // Renderização simples (sem alterar estilos existentes)
-          data.forEach(row => {
-            const card = el("div", "vstack gap");
-            const head = el("div", "row-between");
-            head.appendChild(el("strong", "", `${row.nup||"-"}`));
-            head.appendChild(el("span", "status", row.status || "-"));
-            const meta = el("div", "muted");
-            const fmt = (d) => d ? new Date(d).toLocaleString() : "-";
-            meta.innerHTML = [
-              `<b>Tipo:</b> ${row.tipo||"-"}`,
-              `<b>1ª Entrada no Regional:</b> ${row.entrada_regional||"-"}`,
-             ].join(" &nbsp;•&nbsp; ");
-            card.appendChild(head);
-            card.appendChild(meta);
-            resultBox.appendChild(card);
-            // separador sutil
-            resultBox.appendChild(el("hr", ""));
-          });
-        } catch (err) {
-          console.error("Erro na busca:", err);
-          if (msg) msg.textContent = "Erro ao buscar. Verifique sua conexão/políticas do banco.";
-        }
-      }
-
-      searchForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const q = (input?.value || "").trim();
-        if (!q) {
-          if (msg) msg.textContent = "Informe um NUP (completo ou parcial).";
+        if (error) throw error;
+        if (!data || data.length === 0) {
+          msg && (msg.textContent = "Nenhum processo encontrado para o NUP informado.");
           return;
         }
-        await runSearch(q);
-      });
+
+        data.forEach(row => {
+          const card = el("div", "vstack gap");
+          const head = el("div", "row-between");
+          head.appendChild(el("strong", "", `${row.nup||"-"}`));
+          head.appendChild(el("span", "status", row.status || "-"));
+          const meta = el("div", "muted");
+          const fmt = (d) => d ? new Date(d).toLocaleString() : "-";
+          meta.innerHTML = [
+            `<b>Tipo:</b> ${row.tipo||"-"}`,
+            `<b>1ª Entrada no Regional:</b> ${row.entrada_regional||"-"}`
+          ].join(" &nbsp;•&nbsp; ");
+          card.appendChild(head);
+          card.appendChild(meta);
+          resultBox.appendChild(card);
+          resultBox.appendChild(el("hr", ""));
+        });
+      } catch (err) {
+        console.error("Erro na busca:", err);
+        msg && (msg.textContent = "Erro ao buscar. Verifique sua conexão/políticas do banco.");
+      }
+    }
+
+    replaceAndBind(searchForm, "submit", async (e) => {
+      e.preventDefault();
+      const q = (input?.value || "").trim();
+      if (!q) {
+        msg && (msg.textContent = "Informe um NUP (completo ou parcial).");
+        return;
+      }
+      await runSearch(q);
+    });
+  }
+
+  // Roteamento por hash
+  window.addEventListener("hashchange", () => render(location.hash.replace(/^#/, '')));
+
+  // Estado inicial: decide rota por sessão
+  document.addEventListener("DOMContentLoaded", async () => {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!location.hash) {
+      location.hash = user ? '#/home' : '#/login';
+    } else {
+      ensureInterFont(true);
+      render(location.hash.replace(/^#/, ''));
     }
   });
 })();
