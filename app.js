@@ -124,11 +124,7 @@
             meta.innerHTML = [
               `<b>Tipo:</b> ${row.tipo||"-"}`,
               `<b>Entrada/Regional:</b> ${row.entrada_regional||"-"}`,
-              `<b>Prazo Saída/Regional:</b> ${fmt(row.prazo_saida_regional)}`,
-              `<b>Saída Regional:</b> ${fmt(row.saida_regional)}`,
-              `<b>Modificado por:</b> ${row.modificado_por||"-"}`,
-              `<b>Atualizado em:</b> ${fmt(row.updated_at)}`
-            ].join(" &nbsp;•&nbsp; ");
+             ].join(" &nbsp;•&nbsp; ");
             card.appendChild(head);
             card.appendChild(meta);
             resultBox.appendChild(card);
