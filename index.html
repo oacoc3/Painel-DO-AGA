@@ -1,19 +1,16 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Entrar • Painel DO-AGA</title>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portal DO-AGA</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script defer src="app.js"></script>
 </head>
-<body class="shell">
+<body class="login-page">
   <main class="card">
-    <header class="card-head">
-      <h1 class="title">Entrar</h1>
-      <p class="status">Acesse com seu e-mail e senha.</p>
-    </header>
+    <h1>Entrar</h1>
+    <p class="subtitle">Acesse com seu e-mail e senha.</p>
 
     <form id="login-form" class="vstack gap" autocomplete="on">
       <label class="field">
@@ -34,57 +31,12 @@
       <p id="login-msg" class="status"></p>
     </form>
 
-    <hr class="sep"/>
+    <!-- 🚫 Bloco de auto-registro removido -->
 
-    <section class="vstack gap">
-      <h2 class="subtitle">Primeiro acesso</h2>
-      <form id="register-form" class="vstack gap" autocomplete="on">
-        <label class="field">
-          <span>Nome</span>
-          <input type="text" id="name" autocomplete="name" />
-        </label>
-        <label class="field">
-          <span>E-mail institucional</span>
-          <input type="email" id="reg-email" autocomplete="username" />
-        </label>
-        <div class="row-end">
-          <button class="btn" type="submit">Registrar</button>
-        </div>
-        <p id="register-msg" class="status"></p>
-      </form>
-    </section>
-
-    <dialog id="set-password" class="dialog">
-      <form method="dialog" class="vstack gap" id="newpass-form">
-        <h3 class="subtitle">Definir senha</h3>
-        <p class="status">Crie sua senha para continuar.</p>
-        <label class="field">
-          <span>Senha</span>
-          <input type="password" id="new-password" autocomplete="new-password" minlength="8" required />
-        </label>
-        <label class="field">
-          <span>Confirmar senha</span>
-          <input type="password" id="new-password2" autocomplete="new-password" minlength="8" required />
-        </label>
-        <div class="row-end gap">
-          <button type="button" class="btn" id="cancel-newpass">Cancelar</button>
-          <button type="submit" class="btn primary">Salvar e continuar</button>
-        </div>
-        <p id="password-msg" class="status"></p>
-      </form>
-    </dialog>
   </main>
 
-  <!-- Rodapé com versão/build, alinhado à esquerda -->
-  <footer class="status"><span id="build-info" class="muted"></span></footer>
-
-  <script>
-    window.APP_ENV = {
-      SUPABASE_URL: "https://SEU-PROJETO.supabase.co",
-      SUPABASE_ANON_KEY: "SEU-ANON-KEY"
-    };
-  </script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="/app.js"></script>
+  <footer>
+    <p id="build-info"></p>
+  </footer>
 </body>
 </html>
