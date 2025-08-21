@@ -103,23 +103,24 @@
   // Montagem da view de login (eventos)
   function mountLogin() {
     const hello = document.getElementById("hello");
-    // limpar mensagem cabeçalho se existir
     if (hello) hello.textContent = "";
 
     const form = document.getElementById("login-form");
     if (!form) return;
 
-    const email = document.getElementById("email");
-    const password = document.getElementById("password");
-    const msg = document.getElementById("login-msg");
-
+    // Importante: não capturar referências internas ANTES do clone
     replaceAndBind(form, "submit", async (e) => {
       e.preventDefault();
-      msg && (msg.textContent = "");
+      const formEl = e.currentTarget || document.getElementById("login-form");
+      const email = formEl ? formEl.querySelector("#email") : document.getElementById("email");
+      const password = formEl ? formEl.querySelector("#password") : document.getElementById("password");
+      const msg = formEl ? formEl.querySelector("#login-msg") : document.getElementById("login-msg");
+
+      if (msg) msg.textContent = "";
       const mail = (email?.value || "").trim();
       const pass = (password?.value || "").trim();
       if (!mail || !pass) {
-        msg && (msg.textContent = "Informe e-mail e senha.");
+        if (msg) msg.textContent = "Informe e-mail e senha.";
         return;
       }
       try {
@@ -128,11 +129,13 @@
         location.hash = '#/home';
       } catch (err) {
         console.error("Falha no login:", err);
-        msg && (msg.textContent = "Falha no login. Verifique suas credenciais.");
+        if (msg) msg.textContent = "Falha no login. Verifique suas credenciais.";
       }
     });
   }
 
+  // Montagem da view home (saudação, logout, busca NUP)
+  
   // Montagem da view home (saudação, logout, busca NUP)
   function mountHome(user) {
     const hello = document.getElementById("hello");
