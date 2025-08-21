@@ -128,7 +128,7 @@
             const fmt = (d) => d ? new Date(d).toLocaleString() : "-";
             meta.innerHTML = [
               `<b>Tipo:</b> ${row.tipo||"-"}`,
-              `<b>Entrada/Regional:</b> ${row.entrada_regional||"-"}`,
+              `<b>1ª Entrada no Regional:</b> ${row.entrada_regional||"-"}`,
              ].join(" &nbsp;•&nbsp; ");
             card.appendChild(head);
             card.appendChild(meta);
