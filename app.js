@@ -156,9 +156,6 @@
     // Busca por NUP (tabela 'processos')
     const searchForm = document.getElementById("search-nup-form");
     if (!searchForm) return;
-    const input = document.getElementById("search-nup");
-    const msg = document.getElementById("search-nup-msg");
-    const resultBox = document.getElementById("search-nup-result");
 
     const el = (tag, className, text) => {
       const x = document.createElement(tag);
@@ -168,20 +165,21 @@
     };
 
     async function runSearch(q) {
-      msg && (msg.textContent = "");
-      resultBox && (resultBox.innerHTML = "");
+      const msg = document.getElementById("search-nup-msg");
+      const resultBox = document.getElementById("search-nup-result");
+      if (msg) msg.textContent = "";
+      if (resultBox) resultBox.innerHTML = "";
 
       try {
         const { data, error } = await sb
-          .from("processos")
-          .select("*")
+          .from("processos").select("*")
           .ilike("nup", `%${q}%`)
           .order("updated_at", { ascending: false })
           .limit(50);
 
         if (error) throw error;
         if (!data || data.length === 0) {
-          msg && (msg.textContent = "Nenhum processo encontrado para o NUP informado.");
+          if (msg) msg.textContent = "Nenhum processo encontrado para o NUP informado.";
           return;
         }
 
@@ -190,34 +188,38 @@
           const head = el("div", "row-between");
           head.appendChild(el("strong", "", `${row.nup||"-"}`));
           head.appendChild(el("span", "status", row.status || "-"));
-          const meta = el("div", "muted");
-          const fmt = (d) => d ? new Date(d).toLocaleString() : "-";
+          const meta = document.createElement("div");
+          meta.className = "muted";
           meta.innerHTML = [
             `<b>Tipo:</b> ${row.tipo||"-"}`,
             `<b>1ª Entrada no Regional:</b> ${row.entrada_regional||"-"}`
           ].join(" &nbsp;•&nbsp; ");
           card.appendChild(head);
           card.appendChild(meta);
-          resultBox.appendChild(card);
-          resultBox.appendChild(el("hr", ""));
+          document.getElementById("search-nup-result").appendChild(card);
+          document.getElementById("search-nup-result").appendChild(el("hr", ""));
         });
       } catch (err) {
         console.error("Erro na busca:", err);
-        msg && (msg.textContent = "Erro ao buscar. Verifique sua conexão/políticas do banco.");
+        const msg2 = document.getElementById("search-nup-msg");
+        if (msg2) msg2.textContent = "Erro ao buscar. Verifique sua conexão/políticas do banco.";
       }
     }
 
     replaceAndBind(searchForm, "submit", async (e) => {
       e.preventDefault();
+      const input = document.getElementById("search-nup");
+      const msg = document.getElementById("search-nup-msg");
       const q = (input?.value || "").trim();
       if (!q) {
-        msg && (msg.textContent = "Informe um NUP (completo ou parcial).");
+        if (msg) msg.textContent = "Informe um NUP (completo ou parcial).";
         return;
       }
       await runSearch(q);
     });
   }
 
+  
   // Roteamento por hash
   window.addEventListener("hashchange", () => render(location.hash.replace(/^#/, '')));
 
