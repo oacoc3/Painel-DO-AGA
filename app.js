@@ -164,6 +164,51 @@
       return x;
     };
 
+    function renderRows(data) {
+      const resultBox = document.getElementById("search-nup-result");
+      if (!resultBox) return;
+      resultBox.innerHTML = "";
+      data.forEach(row => {
+        const card = el("div", "vstack gap");
+        const head = el("div", "row-between");
+        head.appendChild(el("strong", "", `${row.nup||"-"}`));
+        head.appendChild(el("span", "status", row.status || "-"));
+        const meta = document.createElement("div");
+        meta.className = "muted";
+        meta.innerHTML = [
+          `<b>Tipo:</b> ${row.tipo||"-"}`,
+          `<b>1ª Entrada no Regional:</b> ${row.entrada_regional||"-"}`
+        ].join(" &nbsp;•&nbsp; ");
+        card.appendChild(head);
+        card.appendChild(meta);
+        resultBox.appendChild(card);
+        resultBox.appendChild(el("hr", ""));
+      });
+    }
+
+    async function fetchAllTramitando() {
+      const msg = document.getElementById("search-nup-msg");
+      const resultBox = document.getElementById("search-nup-result");
+      if (msg) msg.textContent = "";
+      if (resultBox) resultBox.innerHTML = "";
+      try {
+        const { data, error } = await sb
+          .from("processos").select("*")
+          .neq("status", "Concluído")
+          .limit(200);
+        if (error) throw error;
+        if (!data || data.length === 0) {
+          if (msg) msg.textContent = "Nenhum processo tramitando no momento.";
+          return;
+        }
+        renderRows(data);
+      } catch (err) {
+        console.error("Erro ao carregar processos tramitando:", err);
+        const msg2 = document.getElementById("search-nup-msg");
+        if (msg2) msg2.textContent = "Erro ao listar processos. Verifique sua conexão/políticas do banco.";
+      }
+    }
+
     async function runSearch(q) {
       const msg = document.getElementById("search-nup-msg");
       const resultBox = document.getElementById("search-nup-result");
@@ -174,31 +219,13 @@
         const { data, error } = await sb
           .from("processos").select("*")
           .ilike("nup", `%${q}%`)
-          .order("nup", { ascending: false })
-          .limit(50);
-
+          .limit(200);
         if (error) throw error;
         if (!data || data.length === 0) {
           if (msg) msg.textContent = "Nenhum processo encontrado para o NUP informado.";
           return;
         }
-
-        data.forEach(row => {
-          const card = el("div", "vstack gap");
-          const head = el("div", "row-between");
-          head.appendChild(el("strong", "", `${row.nup||"-"}`));
-          head.appendChild(el("span", "status", row.status || "-"));
-          const meta = document.createElement("div");
-          meta.className = "muted";
-          meta.innerHTML = [
-            `<b>Tipo:</b> ${row.tipo||"-"}`,
-            `<b>1ª Entrada no Regional:</b> ${row.entrada_regional||"-"}`
-          ].join(" &nbsp;•&nbsp; ");
-          card.appendChild(head);
-          card.appendChild(meta);
-          document.getElementById("search-nup-result").appendChild(card);
-          document.getElementById("search-nup-result").appendChild(el("hr", ""));
-        });
+        renderRows(data);
       } catch (err) {
         console.error("Erro na busca:", err);
         const msg2 = document.getElementById("search-nup-msg");
@@ -206,20 +233,37 @@
       }
     }
 
+    // Botão Limpar
+    const clearBtn = document.getElementById("clear-search");
+    if (clearBtn) {
+      replaceAndBind(clearBtn, "click", async () => {
+        const input = document.getElementById("search-nup");
+        const msg = document.getElementById("search-nup-msg");
+        if (input) input.value = "";
+        if (msg) msg.textContent = "";
+        await fetchAllTramitando();
+        input && input.focus();
+      });
+    }
+
+    // Submit de busca
     replaceAndBind(searchForm, "submit", async (e) => {
       e.preventDefault();
       const input = document.getElementById("search-nup");
-      const msg = document.getElementById("search-nup-msg");
       const q = (input?.value || "").trim();
       if (!q) {
-        if (msg) msg.textContent = "Informe um NUP (completo ou parcial).";
+        await fetchAllTramitando();
         return;
       }
       await runSearch(q);
     });
+
+    // Auto-carregar 'tramitando' se não houver termo na chegada na home
+    const initialQ = (document.getElementById("search-nup")?.value || "").trim();
+    if (initialQ) runSearch(initialQ);
+    else fetchAllTramitando();
   }
 
-  
   // Roteamento por hash
   window.addEventListener("hashchange", () => render(location.hash.replace(/^#/, '')));
 
