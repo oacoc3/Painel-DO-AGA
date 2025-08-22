@@ -96,7 +96,7 @@
       ensureInterFont(true);
       show($homeView()); hide($loginView());
       $body().className = 'shell';         // manter classe original da home
-      mountHome(user);
+      await mountHome(user);
     }
     document.body.setAttribute('data-route', route);
   }
@@ -136,7 +136,7 @@
   }
 
   // Montagem da view home (saudação, logout, busca NUP)
-  function mountHome(user) {
+  async function mountHome(user) {
     const hello = document.getElementById("hello");
     if (hello) {
       if (user) hello.textContent = `Autenticado como ${user.email}`;
@@ -152,7 +152,17 @@
       });
     }
 
-    // Busca por NUP (tabela 'processos')
+    // Carregar catálogo de status para mapear nome → id
+    let statusMap = {};
+    try {
+      const { data, error } = await sb.from("status_catalog").select("id, name");
+      if (error) throw error;
+      statusMap = Object.fromEntries((data || []).map(s => [s.name, s.id]));
+    } catch (err) {
+      console.error("Erro ao carregar catálogo de status:", err);
+    }
+
+     // Busca por NUP (tabela 'processos')
     const searchForm = document.getElementById("search-nup-form");
     if (!searchForm) return;
 
@@ -178,14 +188,15 @@
       replaceAndBind(btn, "click", async e => {
         if (!selectedProcess) return;
         const newStatus = e.currentTarget.dataset.status;
-        try {
+        const statusId = statusMap[newStatus];
+         try {
           const key = selectedProcess.id != null
             ? { column: "id", value: selectedProcess.id }
             : { column: "nup", value: selectedProcess.nup };
 
-           const { error } = await sb
+          const { error } = await sb
             .from("processos")
-            .update({ status: newStatus })
+             .update({ status_id: statusId })
             .eq(key.column, key.value);
           if (error) throw error;
 
@@ -194,7 +205,7 @@
             if (selectedProcess.id != null) {
               await sb.from("processos_historico").insert({
                 processo_id: selectedProcess.id,
-                status: newStatus,
+                status_id: statusId,
                 changed_by: (user && (user.email || user.id)) || null,
               });
             }
@@ -214,47 +225,47 @@
       })
     );
     updateStatusButtons(null);
-     
-      const el = (tag, className, text) => {
-        const x = document.createElement(tag);
-        if (className) x.className = className;
-        if (text != null) x.textContent = text;
-        return x;
-      };
 
-      const historySection = document.getElementById("history-section");
-      const historyBox = document.getElementById("process-history");
-      const historyMsg = document.getElementById("history-msg");
+    const el = (tag, className, text) => {
+      const x = document.createElement(tag);
+      if (className) x.className = className;
+      if (text != null) x.textContent = text;
+      return x;
+    };
 
-      async function loadHistory(id) {
-        if (historySection) historySection.style.display = "block";
-        if (historyBox) historyBox.innerHTML = "";
-        if (historyMsg) historyMsg.textContent = "";
-        try {
-          const { data, error } = await sb
-            .from("processos_historico")
-            .select("*")
-            .eq("processo_id", id)
-            .order("changed_at");
-          if (error) throw error;
-          if (!data || data.length === 0) {
-            if (historyMsg) historyMsg.textContent = "Sem histórico.";
-            return;
-          }
-          data.forEach(item => {
-            const tr = document.createElement("tr");
-            tr.appendChild(el("td", "", item.status || "-"));
-            tr.appendChild(el("td", "", item.observacao || "-"));
-            tr.appendChild(el("td", "", item.changed_at || "-"));
-            tr.appendChild(el("td", "", item.changed_by || "-"));
-            historyBox.appendChild(tr);
-          });
-        } catch (err) {
-          console.error("Erro ao carregar histórico:", err);
-          if (historyMsg) historyMsg.textContent = "Erro ao carregar histórico.";
+    const historySection = document.getElementById("history-section");
+    const historyBox = document.getElementById("process-history");
+    const historyMsg = document.getElementById("history-msg");
+
+    async function loadHistory(id) {
+      if (historySection) historySection.style.display = "block";
+      if (historyBox) historyBox.innerHTML = "";
+      if (historyMsg) historyMsg.textContent = "";
+      try {
+        const { data, error } = await sb
+          .from("processos_historico")
+          .select("status_catalog(name), observacao, changed_at, changed_by")
+          .eq("processo_id", id)
+          .order("changed_at");
+        if (error) throw error;
+        if (!data || data.length === 0) {
+          if (historyMsg) historyMsg.textContent = "Sem histórico.";
+          return;
         }
+        data.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.appendChild(el("td", "", (item.status_catalog && item.status_catalog.name) || "-"));
+          tr.appendChild(el("td", "", item.observacao || "-"));
+          tr.appendChild(el("td", "", item.changed_at || "-"));
+          tr.appendChild(el("td", "", item.changed_by || "-"));
+          historyBox.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("Erro ao carregar histórico:", err);
+        if (historyMsg) historyMsg.textContent = "Erro ao carregar histórico.";
       }
-      function formatDate(str) {
+    }
+     function formatDate(str) {
         if (!str) return "-";
         const d = new Date(str);
         if (isNaN(d)) return str;
@@ -317,16 +328,26 @@
       if (msg) msg.textContent = "";
       if (resultBox) resultBox.innerHTML = "";
       try {
-        const { data, error } = await sb
-          .from("processos").select("*")
-          .neq("status", "Concluído")
+        const concludedId = statusMap["Concluído"];
+        let query = sb
+          .from("processos")
+          .select("id, nup, entrada_regional, updated_at, ultima_atualizacao, process_types(name), status_catalog(name)")
           .limit(200);
-        if (error) throw error;
-        if (!data || data.length === 0) {
+        if (concludedId !== undefined) {
+          query = query.neq("status_id", concludedId);
+        }
+        const { data, error } = await query;
+         if (error) throw error;
+        const rows = (data || []).map(r => ({
+          ...r,
+          tipo: (r.process_types && r.process_types.name) || "",
+          status: (r.status_catalog && r.status_catalog.name) || "",
+        }));
+        if (rows.length === 0) {
           if (msg) msg.textContent = "Nenhum processo tramitando no momento.";
           return;
         }
-        renderRows(data);
+        renderRows(rows);
       } catch (err) {
         console.error("Erro ao carregar processos tramitando:", err);
         const msg2 = document.getElementById("search-nup-msg");
@@ -342,17 +363,23 @@
 
       try {
         const { data, error } = await sb
-          .from("processos").select("*")
+          .from("processos")
+          .select("id, nup, entrada_regional, updated_at, ultima_atualizacao, process_types(name), status_catalog(name)")
           .ilike("nup", `%${q}%`)
           .limit(200);
         if (error) throw error;
-        if (!data || data.length === 0) {
+         const rows = (data || []).map(r => ({
+          ...r,
+          tipo: (r.process_types && r.process_types.name) || "",
+          status: (r.status_catalog && r.status_catalog.name) || "",
+        }));
+        if (rows.length === 0) {
           await fetchAllTramitando();
           if (msg) msg.textContent = "Nenhum processo encontrado para o NUP informado.";
           return [];
         }
-        renderRows(data);
-        return data;
+        renderRows(rows);
+        return rows;
       } catch (err) {
         console.error("Erro na busca:", err);
         const msg2 = document.getElementById("search-nup-msg");
