@@ -22,7 +22,6 @@
         document.head.appendChild(link);
       }
     } else {
-      ensureInterFont(true);
       if (existing) existing.remove();
     }
   }
@@ -135,8 +134,6 @@
   }
 
   // Montagem da view home (saudação, logout, busca NUP)
-  
-  // Montagem da view home (saudação, logout, busca NUP)
   function mountHome(user) {
     const hello = document.getElementById("hello");
     if (hello) {
@@ -231,7 +228,6 @@
         const msg2 = document.getElementById("search-nup-msg");
         if (msg2) msg2.textContent = "Erro ao buscar. Verifique sua conexão/políticas do banco.";
       }
-    }
     }
 
     // Submit de busca
