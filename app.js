@@ -156,27 +156,66 @@
     const searchForm = document.getElementById("search-nup-form");
     if (!searchForm) return;
 
-    const el = (tag, className, text) => {
-      const x = document.createElement(tag);
-      if (className) x.className = className;
-      if (text != null) x.textContent = text;
-      return x;
-    };
+      const el = (tag, className, text) => {
+        const x = document.createElement(tag);
+        if (className) x.className = className;
+        if (text != null) x.textContent = text;
+        return x;
+      };
 
-    function renderRows(data) {
-      const resultBox = document.getElementById("search-nup-result");
-      if (!resultBox) return;
-      resultBox.innerHTML = "";
-      data.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.appendChild(el("td", "", row.nup || "-"));
-        tr.appendChild(el("td", "", row.tipo || "-"));
-        tr.appendChild(el("td", "", row.entrada_regional || "-"));
-        tr.appendChild(el("td", "status", row.status || "-"));
-        tr.appendChild(el("td", "", row.ultima_atualizacao || row.updated_at || "-"));
-        resultBox.appendChild(tr);
-      });
-    }
+      const historySection = document.getElementById("history-section");
+      const historyBox = document.getElementById("process-history");
+      const historyMsg = document.getElementById("history-msg");
+
+      async function loadHistory(id) {
+        if (historySection) historySection.style.display = "block";
+        if (historyBox) historyBox.innerHTML = "";
+        if (historyMsg) historyMsg.textContent = "";
+        try {
+          const { data, error } = await sb
+            .from("processos_historico")
+            .select("*")
+            .eq("processo_id", id)
+            .order("changed_at");
+          if (error) throw error;
+          if (!data || data.length === 0) {
+            if (historyMsg) historyMsg.textContent = "Sem histórico.";
+            return;
+          }
+          data.forEach(item => {
+            const tr = document.createElement("tr");
+            tr.appendChild(el("td", "", item.status || "-"));
+            tr.appendChild(el("td", "", item.observacao || "-"));
+            tr.appendChild(el("td", "", item.changed_at || "-"));
+            tr.appendChild(el("td", "", item.changed_by || "-"));
+            historyBox.appendChild(tr);
+          });
+        } catch (err) {
+          console.error("Erro ao carregar histórico:", err);
+          if (historyMsg) historyMsg.textContent = "Erro ao carregar histórico.";
+        }
+      }
+
+      function renderRows(data) {
+        const resultBox = document.getElementById("search-nup-result");
+        if (!resultBox) return;
+        resultBox.innerHTML = "";
+        if (historySection) {
+          historySection.style.display = "none";
+          if (historyBox) historyBox.innerHTML = "";
+          if (historyMsg) historyMsg.textContent = "";
+        }
+        data.forEach(row => {
+          const tr = document.createElement("tr");
+          tr.appendChild(el("td", "", row.nup || "-"));
+          tr.appendChild(el("td", "", row.tipo || "-"));
+          tr.appendChild(el("td", "", row.entrada_regional || "-"));
+          tr.appendChild(el("td", "status", row.status || "-"));
+          tr.appendChild(el("td", "", row.ultima_atualizacao || row.updated_at || "-"));
+          tr.addEventListener("click", () => loadHistory(row.id));
+          resultBox.appendChild(tr);
+        });
+      }
 
     async function fetchAllTramitando() {
       const msg = document.getElementById("search-nup-msg");
