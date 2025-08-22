@@ -156,6 +156,21 @@
     const searchForm = document.getElementById("search-nup-form");
     if (!searchForm) return;
 
+           const statusButtons = Array.from(document.querySelectorAll(".process-actions .btn"));
+      function updateStatusButtons(currentStatus){
+        statusButtons.forEach(btn => {
+          const st = btn.dataset.status;
+          if (!currentStatus || st === currentStatus){
+            btn.disabled = true;
+            btn.classList.remove("primary");
+          } else {
+            btn.disabled = false;
+            btn.classList.add("primary");
+          }
+        });
+      }
+      updateStatusButtons(null);
+
       const el = (tag, className, text) => {
         const x = document.createElement(tag);
         if (className) x.className = className;
@@ -221,7 +236,8 @@
         const resultBox = document.getElementById("search-nup-result");
         if (!resultBox) return;
         resultBox.innerHTML = "";
-        if (historySection) {
+        updateStatusButtons(null);
+         if (historySection) {
           historySection.style.display = "none";
           if (historyBox) historyBox.innerHTML = "";
           if (historyMsg) historyMsg.textContent = "";
@@ -239,7 +255,11 @@
             const nup = row.nup || "";
             const processId = row.id;
             if (input) input.value = nup;
-            runSearch(nup).then(() => loadHistory(processId));
+            runSearch(nup).then(rows => {
+              const current = (rows && rows[0] && rows[0].status) || row.status;
+              updateStatusButtons(current);
+              loadHistory(processId);
+            });
           });
           resultBox.appendChild(tr);
         });
@@ -282,14 +302,16 @@
         if (error) throw error;
         if (!data || data.length === 0) {
           await fetchAllTramitando();
-           if (msg) msg.textContent = "Nenhum processo encontrado para o NUP informado.";
-          return;
+          if (msg) msg.textContent = "Nenhum processo encontrado para o NUP informado.";
+          return [];
         }
         renderRows(data);
+        return data;
       } catch (err) {
         console.error("Erro na busca:", err);
         const msg2 = document.getElementById("search-nup-msg");
         if (msg2) msg2.textContent = "Erro ao buscar. Verifique sua conexão/políticas do banco.";
+        return [];
       }
     }
 
