@@ -24,6 +24,7 @@ body{margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-
 .btn{height:40px; padding:0 14px; border-radius:10px; border:1px solid var(--border); background:#151920; color:var(--text); cursor:pointer;}
 .btn:hover{filter:brightness(1.05);}
 .btn.primary{background:var(--primary); border-color:#3b67d6;}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
 .status{font-size:13px; color:var(--muted);}
 .muted{color:var(--muted);}
 .dialog{width:min(520px,92vw); border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:var(--radius); padding:20px;}
