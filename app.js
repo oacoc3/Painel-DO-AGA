@@ -221,7 +221,8 @@
           .limit(200);
         if (error) throw error;
         if (!data || data.length === 0) {
-          if (msg) msg.textContent = "Nenhum processo encontrado para o NUP informado.";
+          await fetchAllTramitando();
+           if (msg) msg.textContent = "Nenhum processo encontrado para o NUP informado.";
           return;
         }
         renderRows(data);
