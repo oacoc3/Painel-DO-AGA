@@ -77,13 +77,18 @@ body.shell{ display:block; overflow:hidden; padding:0; } /* evitar rolagem da te
 .process-table{width:100%; border-collapse:collapse; table-layout:fixed;}
 .process-table th,.process-table td{
   padding:8px;
-  text-align:left;
+  text-align:center;
   border-bottom:1px solid var(--border);
-  font-size:16px;
+  font-size:14px;
   word-break:break-word;
 }
 .process-table th{font-weight:600;}
-
+.process-table thead th{
+  position:sticky;
+  top:0;
+  z-index:1;
+  background:var(--bg);
+}
 
 /* Histórico do processo */
 .history-section{margin-top:24px;}
