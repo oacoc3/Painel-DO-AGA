@@ -170,7 +170,48 @@
         });
       }
       updateStatusButtons(null);
+    // Processo atualmente selecionado (id + nup)
+    let selectedProcess = null;
 
+    // Botões de alteração de status
+    let statusButtons = Array.from(document.querySelectorAll(".process-actions .btn"));
+    function updateStatusButtons(currentStatus) {
+      statusButtons.forEach(btn => {
+        const st = btn.dataset.status;
+        if (!currentStatus || st === currentStatus) {
+          btn.disabled = true;
+          btn.classList.remove("primary");
+        } else {
+          btn.disabled = false;
+          btn.classList.add("primary");
+        }
+      });
+    }
+    // Bind dos botões para efetuar mudança de status
+    statusButtons = statusButtons.map(btn =>
+      replaceAndBind(btn, "click", async e => {
+        if (!selectedProcess) return;
+        const newStatus = e.currentTarget.dataset.status;
+        try {
+          const { error } = await sb
+            .from("processos")
+            .update({ status: newStatus })
+            .eq("id", selectedProcess.id);
+          if (error) throw error;
+
+          // Recarregar lista e histórico
+          const rows = await runSearch(selectedProcess.nup);
+          const current =
+            (rows && rows[0] && rows[0].status) || newStatus;
+          updateStatusButtons(current);
+          loadHistory(selectedProcess.id);
+        } catch (err) {
+          console.error("Erro ao atualizar status:", err);
+        }
+      })
+    );
+    updateStatusButtons(null);
+     
       const el = (tag, className, text) => {
         const x = document.createElement(tag);
         if (className) x.className = className;
@@ -254,10 +295,12 @@
             const input = document.getElementById("search-nup");
             const nup = row.nup || "";
             const processId = row.id;
-            if (input) input.value = nup;
+            selectedProcess = { id: processId, nup };
+             if (input) input.value = nup;
             runSearch(nup).then(rows => {
               const current = (rows && rows[0] && rows[0].status) || row.status;
-              updateStatusButtons(current);
+              selectedProcess.status = current;
+               updateStatusButtons(current);
               loadHistory(processId);
             });
           });
