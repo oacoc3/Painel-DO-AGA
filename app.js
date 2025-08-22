@@ -226,7 +226,8 @@
           const rows = await runSearch(selectedProcess.nup);
           const current =
             (rows && rows[0] && rows[0].status) || newStatus;
-          updateStatusButtons(current);
+          selectedProcess.status = current;
+           updateStatusButtons(current);
           if (selectedProcess.id != null) loadHistory(selectedProcess.id);
         } catch (err) {
           console.error("Erro ao atualizar status:", err);
