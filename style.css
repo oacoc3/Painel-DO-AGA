@@ -38,7 +38,12 @@ dialog::backdrop{background:rgba(0,0,0,.55);}
   width:min(520px, 92vw);
 }
 /* Rodapé (foot) para os dados de build */
-.foot{}
+.foot{
+  position:fixed;
+  left:16px;
+  bottom:8px;
+  text-align:left;
+}
 
 /* ==== Layout Home: duas colunas (esquerda: busca; direita: lista 40%) ==== */
 body.shell{ display:block; overflow:hidden; padding:0; } /* evitar rolagem da tela na home */
