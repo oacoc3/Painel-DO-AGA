@@ -70,21 +70,36 @@
           </form>
         </section>
       </main>
-      <aside class="home-list">
-        <table class="process-table">
-          <thead>
-            <tr>
-              <th>NUP</th>
-              <th>Tipo</th>
-              <th>1ª Entrada no Regional</th>
-              <th>Status</th>
-              <th>Última Atualização</th>
-            </tr>
-          </thead>
-          <tbody id="search-nup-result"></tbody>
-        </table>
-      </aside>
-    </section>
+        <aside class="home-list">
+          <table class="process-table">
+            <thead>
+              <tr>
+                <th>NUP</th>
+                <th>Tipo</th>
+                <th>1ª Entrada no Regional</th>
+                <th>Status</th>
+                <th>Última Atualização</th>
+              </tr>
+            </thead>
+            <tbody id="search-nup-result"></tbody>
+          </table>
+          <section id="history-section" class="history-section" style="display:none;">
+            <h2>Histórico do Processo</h2>
+            <p id="history-msg" class="status"></p>
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Observação</th>
+                  <th>Alterado em</th>
+                  <th>Alterado por</th>
+                </tr>
+              </thead>
+              <tbody id="process-history"></tbody>
+            </table>
+          </section>
+        </aside>
+      </section>
     <!-- Rodapé com versão/build, alinhado à esquerda -->
     <footer class="foot status">
       <span id="build-info" class="muted"></span>
