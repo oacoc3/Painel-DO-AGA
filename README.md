@@ -7,7 +7,7 @@ O roteamento é feito no **hash da URL** (`#/login` e `#/home`) com **guardas de
 ## Estrutura
 - `index.html`: única página, contém as duas *views* (`#view-login` e `#view-home`).
 - `app.js`: roteador por hash, integração com Supabase, login/logout, busca de NUP.
-- `style.css`: **inalterado**.
+- `style.css`: ajustes menores de formatação.
 - `README.md`: este arquivo.
 
 ## Rotas
