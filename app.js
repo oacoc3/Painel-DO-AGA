@@ -195,7 +195,28 @@
           if (historyMsg) historyMsg.textContent = "Erro ao carregar histórico.";
         }
       }
+      function formatDate(str) {
+        if (!str) return "-";
+        const d = new Date(str);
+        if (isNaN(d)) return str;
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = String(d.getFullYear()).slice(-2);
+        return `${day}/${month}/${year}`;
+      }
 
+      function formatDateTime(str) {
+        if (!str) return "-";
+        const d = new Date(str);
+        if (isNaN(d)) return str;
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = String(d.getFullYear()).slice(-2);
+        const hour = String(d.getHours()).padStart(2, "0");
+        const minute = String(d.getMinutes()).padStart(2, "0");
+        return `${day}/${month}/${year} ${hour}/${minute}`;
+      }
+     
       function renderRows(data) {
         const resultBox = document.getElementById("search-nup-result");
         if (!resultBox) return;
@@ -209,9 +230,10 @@
           const tr = document.createElement("tr");
           tr.appendChild(el("td", "", row.nup || "-"));
           tr.appendChild(el("td", "", row.tipo || "-"));
-          tr.appendChild(el("td", "", row.entrada_regional || "-"));
+          tr.appendChild(el("td", "", formatDate(row.entrada_regional)));
           tr.appendChild(el("td", "status", row.status || "-"));
-          tr.appendChild(el("td", "", row.ultima_atualizacao || row.updated_at || "-"));
+           const last = row.ultima_atualizacao || row.updated_at;
+          tr.appendChild(el("td", "", formatDateTime(last)));
           tr.addEventListener("click", () => loadHistory(row.id));
           resultBox.appendChild(tr);
         });
