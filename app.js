@@ -232,18 +232,6 @@
         if (msg2) msg2.textContent = "Erro ao buscar. Verifique sua conexão/políticas do banco.";
       }
     }
-
-    // Botão Limpar
-    const clearBtn = document.getElementById("clear-search");
-    if (clearBtn) {
-      replaceAndBind(clearBtn, "click", async () => {
-        const input = document.getElementById("search-nup");
-        const msg = document.getElementById("search-nup-msg");
-        if (input) input.value = "";
-        if (msg) msg.textContent = "";
-        await fetchAllTramitando();
-        input && input.focus();
-      });
     }
 
     // Submit de busca
@@ -257,6 +245,21 @@
       }
       await runSearch(q);
     });
+    // Botão Limpar (bind após o clone do form)
+    {
+      const clearBtn = document.getElementById("clear-search");
+      if (clearBtn) {
+        replaceAndBind(clearBtn, "click", async () => {
+          const input = document.getElementById("search-nup");
+          const msg = document.getElementById("search-nup-msg");
+          if (input) input.value = "";
+          if (msg) msg.textContent = "";
+          await fetchAllTramitando();
+          if (input) input.focus();
+        });
+      }
+    }
+
 
     // Auto-carregar 'tramitando' se não houver termo na chegada na home
     const initialQ = (function(){var __el=document.getElementById("search-nup"); return ((__el && __el.value) || "").trim();})();
