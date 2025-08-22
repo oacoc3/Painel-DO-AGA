@@ -211,7 +211,7 @@
               await sb.from("processos_historico").insert({
                 processo_id: selectedProcess.id,
                 status_id: statusId,
-                 // Tabela exige registro do NUP do processo no histórico
+                  // Tabela exige registro do NUP do processo no histórico
                 nup: selectedProcess.nup,
                 // 'changed_by' referencia a coluna 'auth.users.id' (UUID). Passar o
                 // e-mail causava erro de conversão. Utilizamos sempre o ID do usuário.
@@ -220,8 +220,17 @@
                 // 'changed_by' referencia a coluna 'auth.users.id' (UUID). Passar o
                 // e-mail causava erro de conversão. Utilizamos sempre o ID do usuário.
                 changed_by: (user && user.id) || null,
+                nup: selectedProcess.nup,
+                // 'changed_by' referencia a coluna 'auth.users.id' (UUID). Passar o
                 // e-mail causava erro de conversão. Utilizamos sempre o ID do usuário.
                 changed_by: (user && user.id) || null,
+                // e-mail causava erro de conversão. Utilizamos sempre o ID do usuário.
+                changed_by: (user && user.id) || null,
+          selectedProcess.status = current;
+          const rowEl = document.querySelector(
+            `#search-nup-result tr[data-id="${selectedProcess.id}"] td.status`
+          );
+          if (rowEl) rowEl.textContent = current;
               });
             }
           } catch (errHist) {
@@ -259,12 +268,12 @@
 
     async function loadHistory(id) {
       if (historySection) historySection.style.display = "block";
-      if (historyBox) historyBox.innerHTML = "";
-      if (historyMsg) historyMsg.textContent = "";
-      try {
-        const { data, error } = await sb
-          .from("processos_historico")
-          // utiliza created_at (timestamp automático do banco)
+          const rowEl = document.createElement("tr");
+          rowEl.appendChild(el("td", "", (item.status && item.status.name) || "-"));
+          rowEl.appendChild(el("td", "", item.observacao || "-"));
+          rowEl.appendChild(el("td", "", formatDateTime(item.created_at)));
+          rowEl.appendChild(el("td", "", item.changed_by || "-"));
+          historyBox.appendChild(rowEl);
           .select("status:status_catalog!processos_historico_status_id_fkey(name), observacao, created_at, changed_by")
           .eq("processo_id", id)
           .order("created_at", { ascending: false });
@@ -304,27 +313,28 @@
         const month = String(d.getMonth() + 1).padStart(2, "0");
         const year = String(d.getFullYear()).slice(-2);
         const hour = String(d.getHours()).padStart(2, "0");
-        const minute = String(d.getMinutes()).padStart(2, "0");
-        return `${day}/${month}/${year} ${hour}:${minute}`;
-      }
-     
-      function renderRows(data) {
+          const rowEl = document.createElement("tr");
+          rowEl.dataset.id = row.id;
+          rowEl.appendChild(el("td", "", row.nup || "-"));
+          rowEl.appendChild(el("td", "", row.tipo || "-"));
+          rowEl.appendChild(el("td", "", formatDate(row.entrada_regional)));
+          rowEl.appendChild(el("td", "status", row.status || "-"));
         const resultBox = document.getElementById("search-nup-result");
-        if (!resultBox) return;
-        resultBox.innerHTML = "";
+          rowEl.appendChild(el("td", "", formatDateTime(last)));
+          rowEl.addEventListener("click", () => {
         updateStatusButtons(null);
          if (historySection) {
           tr.dataset.id = row.id;
             historySection.style.display = "none";
-          if (historyBox) historyBox.innerHTML = "";
+            if (input) input.value = nup;
           if (historyMsg) historyMsg.textContent = "";
         }
         data.forEach(row => {
-          const tr = document.createElement("tr");
+              updateStatusButtons(current);
           tr.appendChild(el("td", "", row.nup || "-"));
           tr.appendChild(el("td", "", row.tipo || "-"));
           tr.appendChild(el("td", "", formatDate(row.entrada_regional)));
-          tr.appendChild(el("td", "status", row.status || "-"));
+          resultBox.appendChild(rowEl);
           const last = row.updated_at;
           tr.appendChild(el("td", "", formatDateTime(last)));
           tr.addEventListener("click", () => {
@@ -334,7 +344,7 @@
             selectedProcess = { id: processId, nup };
              if (input) input.value = nup;
             runSearch(nup).then(rows => {
-              const current = (rows && rows[0] && rows[0].status) || row.status;
+        const concludedId = statusMap["concluído"] ?? statusMap["concluido"];
               selectedProcess.status = current;
                updateStatusButtons(current);
               loadHistory(processId);
