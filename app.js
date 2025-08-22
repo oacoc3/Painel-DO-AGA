@@ -211,7 +211,9 @@
               await sb.from("processos_historico").insert({
                 processo_id: selectedProcess.id,
                 status_id: statusId,
-                changed_by: (user && (user.email || user.id)) || null,
+                // 'changed_by' referencia a coluna 'auth.users.id' (UUID). Passar o
+                // e-mail causava erro de conversão. Utilizamos sempre o ID do usuário.
+                changed_by: (user && user.id) || null,
               });
             }
           } catch (errHist) {
