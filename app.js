@@ -211,7 +211,11 @@
               await sb.from("processos_historico").insert({
                 processo_id: selectedProcess.id,
                 status_id: statusId,
-                // Tabela exige registro do NUP do processo no histórico
+                 // Tabela exige registro do NUP do processo no histórico
+                nup: selectedProcess.nup,
+                // 'changed_by' referencia a coluna 'auth.users.id' (UUID). Passar o
+                // e-mail causava erro de conversão. Utilizamos sempre o ID do usuário.
+                changed_by: (user && user.id) || null,
                 nup: selectedProcess.nup,
                 // 'changed_by' referencia a coluna 'auth.users.id' (UUID). Passar o
                 // e-mail causava erro de conversão. Utilizamos sempre o ID do usuário.
@@ -222,6 +226,11 @@
             }
           } catch (errHist) {
             console.error("Erro ao registrar histórico:", errHist);
+          selectedProcess.status = current;
+          const rowEl = document.querySelector(
+            `#search-nup-result tr[data-id="${selectedProcess.id}"] td.status`
+          );
+          if (rowEl) rowEl.textContent = current;
           }
 
            // Recarregar lista e histórico
@@ -305,7 +314,8 @@
         resultBox.innerHTML = "";
         updateStatusButtons(null);
          if (historySection) {
-          historySection.style.display = "none";
+          tr.dataset.id = row.id;
+            historySection.style.display = "none";
           if (historyBox) historyBox.innerHTML = "";
           if (historyMsg) historyMsg.textContent = "";
         }
