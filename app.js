@@ -32,9 +32,11 @@
     try {
       const el = document.getElementById("build-info");
       if (el) {
-        const now = new Date();
-        const ts = now.toISOString().slice(0,19).replace('T',' ');
-        el.textContent = `Build AGA • ${ts}`;
+        const build = env.BUILD_ID || "dev";
+        const ts = (env.BUILD_TIME || new Date().toISOString())
+          .slice(0, 19)
+          .replace("T", " ");
+        el.textContent = `Build ${build} • ${ts}`;
       }
     } catch (_) {}
   }
