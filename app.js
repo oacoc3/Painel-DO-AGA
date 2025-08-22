@@ -157,7 +157,11 @@
     try {
       const { data, error } = await sb.from("status_catalog").select("id, name");
       if (error) throw error;
-      statusMap = Object.fromEntries((data || []).map(s => [s.name, s.id]));
+      // Usa nomes normalizados em minúsculas para evitar problemas de
+      // correspondência com acentuação ou capitalização nos botões da UI
+      statusMap = Object.fromEntries(
+        (data || []).map(s => [String(s.name).toLowerCase(), s.id])
+      );
     } catch (err) {
       console.error("Erro ao carregar catálogo de status:", err);
     }
@@ -172,9 +176,10 @@
     // Botões de alteração de status
     let statusButtons = Array.from(document.querySelectorAll(".process-actions .btn"));
     function updateStatusButtons(currentStatus) {
-      statusButtons.forEach(btn => {
-        const st = btn.dataset.status;
-        if (!currentStatus || st === currentStatus) {
+      const cs = currentStatus ? currentStatus.toLowerCase() : null;
+       statusButtons.forEach(btn => {
+        const st = (btn.dataset.status || "").toLowerCase();
+        if (!cs || st === cs) {
           btn.disabled = true;
           btn.classList.remove("primary");
         } else {
@@ -187,9 +192,9 @@
     statusButtons = statusButtons.map(btn =>
       replaceAndBind(btn, "click", async e => {
         if (!selectedProcess) return;
-        const newStatus = e.currentTarget.dataset.status;
-        const statusId = statusMap[newStatus];
-         try {
+        const newStatus = (e.currentTarget.dataset.status || "").trim();
+        const statusId = statusMap[newStatus.toLowerCase()];
+        try {
           const key = selectedProcess.id != null
             ? { column: "id", value: selectedProcess.id }
             : { column: "nup", value: selectedProcess.nup };
@@ -244,9 +249,10 @@
       try {
         const { data, error } = await sb
           .from("processos_historico")
-          .select("status_catalog(name), observacao, changed_at, changed_by")
+          // utiliza created_at (timestamp automático do banco)
+          .select("status:status_catalog!processos_historico_status_id_fkey(name), observacao, created_at, changed_by")
           .eq("processo_id", id)
-          .order("changed_at");
+          .order("created_at", { ascending: false });
         if (error) throw error;
         if (!data || data.length === 0) {
           if (historyMsg) historyMsg.textContent = "Sem histórico.";
@@ -254,9 +260,9 @@
         }
         data.forEach(item => {
           const tr = document.createElement("tr");
-          tr.appendChild(el("td", "", (item.status_catalog && item.status_catalog.name) || "-"));
+           tr.appendChild(el("td", "", (item.status && item.status.name) || "-"));
           tr.appendChild(el("td", "", item.observacao || "-"));
-          tr.appendChild(el("td", "", item.changed_at || "-"));
+          tr.appendChild(el("td", "", formatDateTime(item.created_at)));
           tr.appendChild(el("td", "", item.changed_by || "-"));
           historyBox.appendChild(tr);
         });
