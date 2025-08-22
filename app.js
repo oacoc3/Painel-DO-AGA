@@ -117,8 +117,8 @@
       const msg = formEl ? formEl.querySelector("#login-msg") : document.getElementById("login-msg");
 
       if (msg) msg.textContent = "";
-      const mail = (email?.value || "").trim();
-      const pass = (password?.value || "").trim();
+      const mail = ((email && email.value) || "").trim();
+      const pass = ((password && password.value) || "").trim();
       if (!mail || !pass) {
         if (msg) msg.textContent = "Informe e-mail e senha.";
         return;
@@ -232,37 +232,34 @@
         if (msg2) msg2.textContent = "Erro ao buscar. Verifique sua conexão/políticas do banco.";
       }
     }
+
+    // Botão Limpar
+    const clearBtn = document.getElementById("clear-search");
+    if (clearBtn) {
+      replaceAndBind(clearBtn, "click", async () => {
+        const input = document.getElementById("search-nup");
+        const msg = document.getElementById("search-nup-msg");
+        if (input) input.value = "";
+        if (msg) msg.textContent = "";
+        await fetchAllTramitando();
+        input && input.focus();
+      });
     }
 
     // Submit de busca
     replaceAndBind(searchForm, "submit", async (e) => {
       e.preventDefault();
       const input = document.getElementById("search-nup");
-      const q = (input?.value || "").trim();
+      const q = ((input && input.value) || "").trim();
       if (!q) {
         await fetchAllTramitando();
         return;
       }
       await runSearch(q);
     });
-    // Botão Limpar (bind após clonar o form)
-    { 
-      const clearBtn = document.getElementById("clear-search");
-      if (clearBtn) {
-        replaceAndBind(clearBtn, "click", async () => {
-          const input = document.getElementById("search-nup");
-          const msg = document.getElementById("search-nup-msg");
-          if (input) input.value = "";
-          if (msg) msg.textContent = "";
-          await fetchAllTramitando();
-          if (input) input.focus();
-        });
-      }
-    }
-
 
     // Auto-carregar 'tramitando' se não houver termo na chegada na home
-    const initialQ = (document.getElementById("search-nup")?.value || "").trim();
+    const initialQ = (function(){var __el=document.getElementById("search-nup"); return ((__el && __el.value) || "").trim();})();
     if (initialQ) runSearch(initialQ);
     else fetchAllTramitando();
   }
