@@ -303,7 +303,7 @@
           tr.appendChild(el("td", "", row.tipo || "-"));
           tr.appendChild(el("td", "", formatDate(row.entrada_regional)));
           tr.appendChild(el("td", "status", row.status || "-"));
-           const last = row.ultima_atualizacao || row.updated_at;
+          const last = row.updated_at;
           tr.appendChild(el("td", "", formatDateTime(last)));
           tr.addEventListener("click", () => {
             const input = document.getElementById("search-nup");
@@ -331,7 +331,7 @@
         const concludedId = statusMap["Concluído"];
         let query = sb
           .from("processos")
-          .select("id, nup, entrada_regional, updated_at, ultima_atualizacao, process_types(name), status_catalog(name)")
+         .select("id, nup, entrada_regional, updated_at, process_types(name), status_catalog(name)")
           .limit(200);
         if (concludedId !== undefined) {
           query = query.neq("status_id", concludedId);
@@ -364,7 +364,7 @@
       try {
         const { data, error } = await sb
           .from("processos")
-          .select("id, nup, entrada_regional, updated_at, ultima_atualizacao, process_types(name), status_catalog(name)")
+          .select("id, nup, entrada_regional, updated_at, process_types(name), status_catalog(name)")
           .ilike("nup", `%${q}%`)
           .limit(200);
         if (error) throw error;
