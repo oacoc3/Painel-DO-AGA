@@ -211,7 +211,11 @@
               await sb.from("processos_historico").insert({
                 processo_id: selectedProcess.id,
                 status_id: statusId,
+                // Tabela exige registro do NUP do processo no histórico
+                nup: selectedProcess.nup,
                 // 'changed_by' referencia a coluna 'auth.users.id' (UUID). Passar o
+                // e-mail causava erro de conversão. Utilizamos sempre o ID do usuário.
+                changed_by: (user && user.id) || null,
                 // e-mail causava erro de conversão. Utilizamos sempre o ID do usuário.
                 changed_by: (user && user.id) || null,
               });
