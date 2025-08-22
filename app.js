@@ -222,12 +222,12 @@
             console.error("Erro ao registrar histórico:", errHist);
           }
 
-           // Recarregar lista e histórico
-          const rows = await runSearch(selectedProcess.nup);
-          const current =
-            (rows && rows[0] && rows[0].status) || newStatus;
-          selectedProcess.status = current;
-           updateStatusButtons(current);
+          // Recarregar lista de processos em tramitação e histórico
+          const input = document.getElementById("search-nup");
+          if (input) input.value = "";
+          selectedProcess.status = newStatus;
+          updateStatusButtons(newStatus);
+          await fetchAllTramitando();
           if (selectedProcess.id != null) loadHistory(selectedProcess.id);
         } catch (err) {
           console.error("Erro ao atualizar status:", err);
