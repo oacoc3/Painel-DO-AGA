@@ -50,9 +50,9 @@
   }
 
   // Views
-  const $loginView = () => document.getElementById("view-login");
-  const $homeView  = () => document.getElementById("view-home");
-  const $body = () => document.body;
+  var $loginView = function(){ return document.getElementById("view-login"); };
+  var $homeView  = function(){ return document.getElementById("view-home"); };
+  var $body = function(){ return document.body; };
 
   async function getUser() {
     try {
@@ -268,7 +268,7 @@
   }
 
   // Roteamento por hash
-  window.addEventListener("hashchange", () => render(location.hash.replace(/^#/, '')));
+  window.addEventListener("hashchange", function(){ render(location.hash.replace(/^#/, '')); });
 
   // Estado inicial: decide rota por sessão
   document.addEventListener("DOMContentLoaded", async () => {
