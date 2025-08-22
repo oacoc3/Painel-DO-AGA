@@ -214,7 +214,7 @@
         const year = String(d.getFullYear()).slice(-2);
         const hour = String(d.getHours()).padStart(2, "0");
         const minute = String(d.getMinutes()).padStart(2, "0");
-        return `${day}/${month}/${year} ${hour}/${minute}`;
+        return `${day}/${month}/${year} ${hour}:${minute}`;
       }
      
       function renderRows(data) {
