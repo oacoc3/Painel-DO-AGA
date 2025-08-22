@@ -69,33 +69,53 @@
         </section>
       </main>
         <aside class="home-list">
-          <table class="process-table">
-            <thead>
-              <tr>
-                <th>NUP</th>
-                <th>Tipo</th>
-                <th>1ª Entrada no Regional</th>
-                <th>Status</th>
-                <th>Última Atualização</th>
-              </tr>
-            </thead>
-            <tbody id="search-nup-result"></tbody>
-          </table>
-          <section id="history-section" class="history-section" style="display:none;">
-            <h2>Histórico do Processo</h2>
-            <p id="history-msg" class="status"></p>
-            <table class="history-table">
-              <thead>
-                <tr>
-                  <th>Status</th>
-                  <th>Observação</th>
-                  <th>Alterado em</th>
-                  <th>Alterado por</th>
-                </tr>
-              </thead>
-              <tbody id="process-history"></tbody>
-            </table>
-          </section>
+          <div class="process-layout">
+            <div class="process-actions vstack gap">
+              <button class="btn" type="button">Análise Documental</button>
+              <button class="btn" type="button">Análise Técnica Preliminar</button>
+              <button class="btn" type="button">Análise Técnica</button>
+              <button class="btn" type="button">Notificação</button>
+              <button class="btn" type="button">Revisão OACO</button>
+              <button class="btn" type="button">Aprovação</button>
+              <button class="btn" type="button">Término de Obra</button>
+              <button class="btn" type="button">Remoção/Rebaixamento</button>
+              <button class="btn" type="button">Parecer ATM</button>
+              <button class="btn" type="button">Parecer DT</button>
+              <button class="btn" type="button">Análise ICA</button>
+              <button class="btn" type="button">Sobrestado Documental</button>
+              <button class="btn" type="button">Sobrestado Técnico</button>
+              <button class="btn" type="button">Concluído</button>
+            </div>
+            <div class="process-content">
+              <table class="process-table">
+                <thead>
+                  <tr>
+                    <th>NUP</th>
+                    <th>Tipo</th>
+                    <th>1ª Entrada no Regional</th>
+                    <th>Status</th>
+                    <th>Última Atualização</th>
+                  </tr>
+                </thead>
+                <tbody id="search-nup-result"></tbody>
+              </table>
+              <section id="history-section" class="history-section" style="display:none;">
+                <h2>Histórico do Processo</h2>
+                <p id="history-msg" class="status"></p>
+                <table class="history-table">
+                  <thead>
+                    <tr>
+                      <th>Status</th>
+                      <th>Observação</th>
+                      <th>Alterado em</th>
+                      <th>Alterado por</th>
+                    </tr>
+                  </thead>
+                  <tbody id="process-history"></tbody>
+                </table>
+              </section>
+            </div>
+          </div>
         </aside>
       </section>
     <!-- Rodapé com versão/build, alinhado à esquerda -->
