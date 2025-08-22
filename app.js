@@ -156,20 +156,6 @@
     const searchForm = document.getElementById("search-nup-form");
     if (!searchForm) return;
 
-           const statusButtons = Array.from(document.querySelectorAll(".process-actions .btn"));
-      function updateStatusButtons(currentStatus){
-        statusButtons.forEach(btn => {
-          const st = btn.dataset.status;
-          if (!currentStatus || st === currentStatus){
-            btn.disabled = true;
-            btn.classList.remove("primary");
-          } else {
-            btn.disabled = false;
-            btn.classList.add("primary");
-          }
-        });
-      }
-      updateStatusButtons(null);
     // Processo atualmente selecionado (id + nup)
     let selectedProcess = null;
 
