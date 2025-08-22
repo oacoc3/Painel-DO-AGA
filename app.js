@@ -168,20 +168,13 @@
       if (!resultBox) return;
       resultBox.innerHTML = "";
       data.forEach(row => {
-        const card = el("div", "vstack gap");
-        const head = el("div", "row-between");
-        head.appendChild(el("strong", "", `${row.nup||"-"}`));
-        head.appendChild(el("span", "status", row.status || "-"));
-        const meta = document.createElement("div");
-        meta.className = "muted";
-        meta.innerHTML = [
-          `<b>Tipo:</b> ${row.tipo||"-"}`,
-          `<b>1ª Entrada no Regional:</b> ${row.entrada_regional||"-"}`
-        ].join(" &nbsp;•&nbsp; ");
-        card.appendChild(head);
-        card.appendChild(meta);
-        resultBox.appendChild(card);
-        resultBox.appendChild(el("hr", ""));
+        const tr = document.createElement("tr");
+        tr.appendChild(el("td", "", row.nup || "-"));
+        tr.appendChild(el("td", "", row.tipo || "-"));
+        tr.appendChild(el("td", "", row.entrada_regional || "-"));
+        tr.appendChild(el("td", "status", row.status || "-"));
+        tr.appendChild(el("td", "", row.ultima_atualizacao || row.updated_at || "-"));
+        resultBox.appendChild(tr);
       });
     }
 
