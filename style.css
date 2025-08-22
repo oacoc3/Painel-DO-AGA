@@ -67,12 +67,19 @@ body.shell{ display:block; overflow:hidden; padding:0; } /* evitar rolagem da te
 .home-list{
   height:100%;
   overflow-y:auto;
+ overflow-x:hidden;
   border-left:1px solid var(--border);
   padding:16px;
 }
 
 
 /* Tabela de processos */
-.process-table{width:100%; border-collapse:collapse;}
-.process-table th,.process-table td{padding:8px; text-align:left; border-bottom:1px solid var(--border);}
+.process-table{width:100%; border-collapse:collapse; table-layout:fixed;}
+.process-table th,.process-table td{
+  padding:8px;
+  text-align:left;
+  border-bottom:1px solid var(--border);
+  font-size:16px;
+  word-break:break-word;
+}
 .process-table th{font-weight:600;}
