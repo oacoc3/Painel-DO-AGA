@@ -179,19 +179,25 @@
         if (!selectedProcess) return;
         const newStatus = e.currentTarget.dataset.status;
         try {
-          const { error } = await sb
+          const key = selectedProcess.id != null
+            ? { column: "id", value: selectedProcess.id }
+            : { column: "nup", value: selectedProcess.nup };
+
+           const { error } = await sb
             .from("processos")
             .update({ status: newStatus })
-            .eq("id", selectedProcess.id);
+            .eq(key.column, key.value);
           if (error) throw error;
 
           // Registrar no histórico do processo
           try {
-            await sb.from("processos_historico").insert({
-              processo_id: selectedProcess.id,
-              status: newStatus,
-              changed_by: (user && (user.email || user.id)) || null,
-            });
+            if (selectedProcess.id != null) {
+              await sb.from("processos_historico").insert({
+                processo_id: selectedProcess.id,
+                status: newStatus,
+                changed_by: (user && (user.email || user.id)) || null,
+              });
+            }
           } catch (errHist) {
             console.error("Erro ao registrar histórico:", errHist);
           }
@@ -201,7 +207,7 @@
           const current =
             (rows && rows[0] && rows[0].status) || newStatus;
           updateStatusButtons(current);
-          loadHistory(selectedProcess.id);
+          if (selectedProcess.id != null) loadHistory(selectedProcess.id);
         } catch (err) {
           console.error("Erro ao atualizar status:", err);
         }
