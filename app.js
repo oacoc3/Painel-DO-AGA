@@ -226,7 +226,7 @@
                 changed_by: (user && user.id) || null,
                 // e-mail causava erro de conversão. Utilizamos sempre o ID do usuário.
                 changed_by: (user && user.id) || null,
-          selectedProcess.status = current;
+          selectedProcess.status: "current";
           const rowEl = document.querySelector(
             `#search-nup-result tr[data-id="${selectedProcess.id}"] td.status`
           );
