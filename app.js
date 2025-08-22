@@ -185,7 +185,18 @@
             .eq("id", selectedProcess.id);
           if (error) throw error;
 
-          // Recarregar lista e histórico
+          // Registrar no histórico do processo
+          try {
+            await sb.from("processos_historico").insert({
+              processo_id: selectedProcess.id,
+              status: newStatus,
+              changed_by: (user && (user.email || user.id)) || null,
+            });
+          } catch (errHist) {
+            console.error("Erro ao registrar histórico:", errHist);
+          }
+
+           // Recarregar lista e histórico
           const rows = await runSearch(selectedProcess.nup);
           const current =
             (rows && rows[0] && rows[0].status) || newStatus;
