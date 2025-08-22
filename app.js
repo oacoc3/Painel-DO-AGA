@@ -270,7 +270,8 @@
 
   // Estado inicial: decide rota por sessão
   document.addEventListener("DOMContentLoaded", async () => {
-    const { data: { user } } = await sb.auth.getUser();
+    setBuildInfo();
+     const { data: { user } } = await sb.auth.getUser();
     if (!location.hash) {
       location.hash = user ? '#/home' : '#/login';
     } else {
