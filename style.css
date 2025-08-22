@@ -8,6 +8,7 @@ body{margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-
 .shell{display:grid; place-items:center; padding:24px;}
 .card{width:min(920px,96vw); background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px;}
 .card-head{display:flex; justify-content:space-between; align-items:flex-end; gap:8px; margin-bottom:16px;}
+.page-head{display:flex; justify-content:space-between; align-items:flex-end; gap:8px; grid-column:1/-1; margin-bottom:16px;}
 .title{margin:0 0 6px 0; font-weight:600;}
 .subtitle{margin:0 0 6px 0; font-weight:600; font-size:18px;}
 .sep{border:none; border-top:1px solid var(--border); margin:16px 0;}
@@ -51,6 +52,7 @@ body.shell{ display:block; overflow:hidden; padding:0; } /* evitar rolagem da te
   display:grid;
   grid-template-columns: auto 40vw;
   gap:16px;
+  grid-template-rows: auto 1fr;
   height:100vh;
   padding:24px;
   box-sizing:border-box;
