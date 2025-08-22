@@ -297,23 +297,38 @@
         return `${day}/${month}/${year} ${hour}:${minute}`;
       }
      
-      function renderRows(data) {
+      async function renderRows(data) {
         const resultBox = document.getElementById("search-nup-result");
         if (!resultBox) return;
         resultBox.innerHTML = "";
         updateStatusButtons(null);
-         if (historySection) {
+        if (historySection) {
           historySection.style.display = "none";
           if (historyBox) historyBox.innerHTML = "";
           if (historyMsg) historyMsg.textContent = "";
         }
-        data.forEach(row => {
+        for (const row of data) {
+          let currentStatus = row.status || "-";
+          let last = row.updated_at;
+          try {
+            const { data: hist } = await sb
+              .from("processos_historico")
+              .select("status:status_catalog(name), created_at")
+              .eq("processo_id", row.id)
+              .order("created_at", { ascending: false })
+              .limit(1);
+            if (hist && hist[0]) {
+              currentStatus = (hist[0].status && hist[0].status.name) || currentStatus;
+              last = hist[0].created_at || last;
+            }
+          } catch (err) {
+            console.error("Erro ao obter status atual:", err);
+          }
           const tr = document.createElement("tr");
           tr.appendChild(el("td", "", row.nup || "-"));
           tr.appendChild(el("td", "", row.tipo || "-"));
           tr.appendChild(el("td", "", formatDate(row.entrada_regional)));
-           tr.appendChild(el("td", "status", row.status || "-"));
-          const last = row.updated_at;
+          tr.appendChild(el("td", "status", currentStatus));
           tr.appendChild(el("td", "", formatDateTime(last)));
           tr.addEventListener("click", () => {
             const input = document.getElementById("search-nup");
@@ -322,14 +337,14 @@
             selectedProcess = { id: processId, nup };
              if (input) input.value = nup;
             runSearch(nup).then(rows => {
-              const current = (rows && rows[0] && rows[0].status) || row.status;
-              selectedProcess.status = current;
-               updateStatusButtons(current);
+              const cur = (rows && rows[0] && rows[0].status) || currentStatus;
+              selectedProcess.status = cur;
+              updateStatusButtons(cur);
               loadHistory(processId);
             });
           });
           resultBox.appendChild(tr);
-        });
+        }
       }
 
     async function fetchAllTramitando() {
@@ -357,7 +372,7 @@
           if (msg) msg.textContent = "Nenhum processo tramitando no momento.";
           return;
         }
-        renderRows(rows);
+        await renderRows(rows);
       } catch (err) {
         console.error("Erro ao carregar processos tramitando:", err);
         const msg2 = document.getElementById("search-nup-msg");
@@ -388,7 +403,7 @@
           if (msg) msg.textContent = "Nenhum processo encontrado para o NUP informado.";
           return [];
         }
-        renderRows(rows);
+        await renderRows(rows);
         return rows;
       } catch (err) {
         console.error("Erro na busca:", err);
