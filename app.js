@@ -236,8 +236,10 @@
           tr.appendChild(el("td", "", formatDateTime(last)));
           tr.addEventListener("click", () => {
             const input = document.getElementById("search-nup");
-            if (input) input.value = row.nup || "";
-            loadHistory(row.id);
+            const nup = row.nup || "";
+            const processId = row.id;
+            if (input) input.value = nup;
+            runSearch(nup).then(() => loadHistory(processId));
           });
           resultBox.appendChild(tr);
         });
