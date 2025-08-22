@@ -79,6 +79,13 @@ body.shell{ display:block; overflow:hidden; padding:0; } /* evitar rolagem da te
   padding:0 16px 16px;
 }
 
+
+/* Layout de ações e listagem de processos */
+.process-layout{display:flex; align-items:flex-start;}
+.process-actions{display:flex; flex-direction:column; gap:8px; margin-right:16px; flex:0 0 180px;}
+.process-actions .btn{width:100%;}
+.process-content{flex:1; min-width:0;}
+
 /* Tabela de processos */
 .process-table{width:100%; border-collapse:collapse; table-layout:fixed;}
 .process-table th,.process-table td{
