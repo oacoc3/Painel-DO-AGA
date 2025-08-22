@@ -234,7 +234,11 @@
           tr.appendChild(el("td", "status", row.status || "-"));
            const last = row.ultima_atualizacao || row.updated_at;
           tr.appendChild(el("td", "", formatDateTime(last)));
-          tr.addEventListener("click", () => loadHistory(row.id));
+          tr.addEventListener("click", () => {
+            const input = document.getElementById("search-nup");
+            if (input) input.value = row.nup || "";
+            loadHistory(row.id);
+          });
           resultBox.appendChild(tr);
         });
       }
