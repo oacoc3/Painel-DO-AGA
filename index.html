@@ -48,7 +48,7 @@
         </div>
       </header>
       <main class="card">
-        <!-- Busca por NUP -->
+        <!-- Formulário de processos -->
         <section class="vstack gap" id="search-nup-box">
           <form id="search-nup-form" class="vstack gap" autocomplete="off">
             <label class="field">
@@ -56,12 +56,26 @@
               <input
                 type="text"
                 id="search-nup"
-                placeholder="Digite o NUP completo ou parcial"
+                placeholder="Digite o NUP completo"
               />
+            </label>
+             <label class="field">
+              <span>Tipo</span>
+              <input type="text" id="process-tipo" placeholder="Tipo do processo" />
+            </label>
+            <label class="field">
+              <span>1ª Entrada no Regional</span>
+              <input type="date" id="process-entrada" />
+            </label>
+            <label class="field">
+              <span>Status</span>
+              <input type="text" id="process-status" placeholder="Status do processo" />
             </label>
             <div class="row-end">
               <button class="btn" type="button" id="clear-search">Limpar</button>
-              <button class="btn primary" type="submit">Buscar</button>
+            const tipoEl = document.getElementById("process-tipo");
+            const entradaEl = document.getElementById("process-entrada");
+            const statusEl = document.getElementById("process-status");
             </div>
             <p id="search-nup-msg" class="status"></p>
           </form>
