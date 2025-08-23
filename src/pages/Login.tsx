@@ -10,9 +10,14 @@ const Login: React.FC = () => {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({ email: username, password });
-    if (error) setError(error.message);
-    else navigate('/dashboard');
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: username, password });
+      if (error) setError(error.message);
+      else navigate('/dashboard');
+    } catch (err) {
+      setError((err as Error).message);
+    }
   };
 
   return (
