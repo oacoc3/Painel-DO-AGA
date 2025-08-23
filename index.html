@@ -60,7 +60,7 @@
         <button id="btnLogin" class="btn primary">Entrar</button>
         <button id="btnSignup" class="btn">Criar conta</button>
       </div>
-      <p class="muted" style="margin-top:8px">Use e-mail/senha. Após criar conta, promova seu perfil para <strong>Administrador</strong> via SQL.</p>
+      <p class="muted" style="margin-top:8px">Use e‑mail/senha. Após criar conta, promova seu perfil para <strong>Administrador</strong> via SQL.</p>
     </section>
 
     <!-- APP VIEW -->
@@ -138,7 +138,6 @@
 
   <script>
     // ====== CONFIG ======
-    // Substitua pelos valores do seu projeto Supabase
     const SUPABASE_URL = 'https://ylrbatujjqpgyhwoszjx.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscmJhdHVqanFwZ3lod29zemp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3NzA1MDEsImV4cCI6MjA3MTM0NjUwMX0._PbuS4KSKv9__ew45Z577g5s5TBbbXHfCrHiT4O750o';
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -187,12 +186,14 @@
     }
     function fmtDateTimeBR(iso){ return `${fmtDateBR(iso)} ${fmtTimeBR(iso)}`; }
 
+    // Sem regex, para evitar qualquer escape inválido ao copiar/colar
     function parseDateBR(str){
-      // DD/MM/AA ou DD/MM/AAAA → ISO (YYYY-MM-DD)
-      const m = String(str||'').trim().match(/^(\\d{2})\\/(\\d{2})\\/(\\d{2,4})$/);
-      if(!m) return null;
-      let [_, dd, mm, yy] = m; // eslint-disable-line no-unused-vars
-      yy = yy.length===2 ? (Number(yy)>=70?`19${yy}`:`20${yy}`) : yy; // heurística simples
+      const s = String(str || '').trim();
+      const parts = s.split('/');
+      if (parts.length !== 3) return null;
+      let [dd, mm, yy] = parts;
+      if (!(dd && mm && yy) || dd.length!==2 || mm.length!==2 || (yy.length!==2 && yy.length!==4)) return null;
+      if (yy.length === 2) yy = Number(yy) >= 70 ? `19${yy}` : `20${yy}`;
       return `${yy}-${mm}-${dd}`;
     }
 
@@ -230,17 +231,14 @@
       byId('btnLogout').classList.remove('hidden');
 
       const user = (await sb.auth.getUser()).data.user;
-      // Buscar/garantir profile
       const { data: p } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
       if(!p){
-        // fallback (deve ser criado por trigger)
         await sb.from('profiles').insert({ id:user.id, full_name:user.email, roles:['Visitante'] });
         profile = { id:user.id, full_name:user.email, roles:['Visitante'] };
       } else {
         profile = p;
       }
 
-      // Montar dropdown de perfis ativos
       const sel = byId('profileSelect'); sel.innerHTML = '';
       (profile.roles||['Visitante']).forEach(r=>{
         const opt = document.createElement('option'); opt.value=r; opt.textContent=r; sel.appendChild(opt);
@@ -288,7 +286,6 @@
           </td>`;
         tbody.appendChild(tr);
       }
-      // Bind row actions
       tbody.querySelectorAll('button[data-act="save"]').forEach(btn=>btn.addEventListener('click', onSaveStatus));
       tbody.querySelectorAll('button[data-act="hist"]').forEach(btn=>btn.addEventListener('click', onOpenHistory));
     }
@@ -389,7 +386,6 @@
 
     // init
     (function init(){
-      // Render opções iniciais (antes do login, só para montar selects)
       const tipo = byId('tipo'); const status = byId('status');
       tipo.innerHTML = TIPOS.map(t=>`<option value="${t.value}">${t.label}</option>`).join('');
       status.innerHTML = STATUS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
