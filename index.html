@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel de Processos (NUP) – Supabase</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root { --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --text:#e5e7eb; --accent:#22c55e; --danger:#ef4444; }
+    *{box-sizing:border-box} body{margin:0;font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto; background:var(--bg); color:var(--text);} 
+    header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#0b1220;border-bottom:1px solid #1f2937;position:sticky;top:0;z-index:5}
+    header .brand{font-weight:700;letter-spacing:.2px} header .right{display:flex;gap:12px;align-items:center}
+    main{max-width:1100px;margin:24px auto;padding:0 16px}
+    .card{background:var(--panel);border:1px solid #1f2937;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .row > *{flex:1 1 220px}
+    input, select, button{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #263142;background:#0b1220;color:var(--text)}
+    button{cursor:pointer;font-weight:600}
+    .btn{background:#1f2937;border-color:#374151}
+    .btn.primary{background:var(--accent);border-color:#16a34a;color:#052e12}
+    .btn.ghost{background:transparent}
+    .btn.danger{background:var(--danger);border-color:#b91c1c;color:#1b0b0b}
+    .muted{color:var(--muted)}
+    table{width:100%;border-collapse:collapse}
+    th, td{padding:10px;border-bottom:1px solid #1f2937;text-align:left}
+    th{font-weight:600;color:#cbd5e1}
+    .right-align{text-align:right}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#111827;border:1px solid #263142}
+    .hidden{display:none}
+    .pill{padding:6px 10px;border:1px solid #1f2937;border-radius:999px;background:#0b1220}
+    .hr{height:1px;background:#1f2937;margin:12px 0}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .nowrap{white-space:nowrap}
+    dialog{border:none;border-radius:16px;max-width:720px;width:90vw;padding:0;background:#0b1220;color:var(--text)}
+    dialog header{position:sticky;top:0}
+    dialog .content{padding:16px}
+    dialog::backdrop{background:rgba(0,0,0,.6)}
+    .table-scroll{overflow:auto;max-height:55vh}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Painel de Processos (NUP)</div>
+    <div class="right">
+      <div id="userInfo" class="muted">—</div>
+      <select id="profileSelect" class="pill hidden"></select>
+      <button id="btnLogout" class="btn ghost hidden">Sair</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- AUTH VIEW -->
+    <section id="authView" class="card">
+      <h2>Entrar</h2>
+      <div class="row">
+        <input id="email" type="email" placeholder="Seu e-mail" autocomplete="email" />
+        <input id="password" type="password" placeholder="Senha" autocomplete="current-password" />
+      </div>
+      <div class="row">
+        <button id="btnLogin" class="btn primary">Entrar</button>
+        <button id="btnSignup" class="btn">Criar conta</button>
+      </div>
+      <p class="muted" style="margin-top:8px">Use e-mail/senha. Após criar conta, promova seu perfil para <strong>Administrador</strong> via SQL.</p>
+    </section>
+
+    <!-- APP VIEW -->
+    <section id="appView" class="hidden">
+      <div class="card" id="permWarning" style="border-color:#3f1e1e;background:#180f0f;display:none">
+        <strong>Permissões:</strong> você está como <span id="activeProfileLabel">Visitante</span>. Edição está desabilitada para este perfil.
+      </div>
+
+      <section class="card" id="createCard">
+        <h2>Novo processo</h2>
+        <div class="row">
+          <input id="nup" placeholder="NUP (número único do processo)" />
+          <select id="tipo"></select>
+          <input id="entrada" placeholder="1ª Entrada Regional (DD/MM/AA)" />
+          <select id="status"></select>
+        </div>
+        <div class="row">
+          <button id="btnCreate" class="btn primary">Inserir processo</button>
+          <button id="btnClear" class="btn">Limpar</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="row">
+          <h2 style="margin:0">Processos</h2>
+          <span class="muted" id="countBadge"></span>
+          <span style="flex:1"></span>
+          <input id="search" placeholder="Filtrar por NUP..." />
+        </div>
+        <div class="hr"></div>
+        <div class="table-scroll">
+          <table id="procTable">
+            <thead>
+              <tr>
+                <th>NUP</th>
+                <th>Tipo</th>
+                <th>1ª Entrada</th>
+                <th>Status</th>
+                <th>Atualizado</th>
+                <th class="right-align">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="procBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <!-- Histórico Modal -->
+  <dialog id="historyModal">
+    <header>
+      <div class="brand">Histórico de status</div>
+      <button onclick="document.getElementById('historyModal').close()" class="btn ghost">Fechar</button>
+    </header>
+    <div class="content">
+      <div class="muted" id="historyTitle">—</div>
+      <div class="hr"></div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Quando</th>
+              <th>De</th>
+              <th>Para</th>
+              <th>Usuário</th>
+              <th>Perfil</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    // ====== CONFIG ======
+    // Substitua pelos valores do seu projeto Supabase
+    const SUPABASE_URL = 'https://ylrbatujjqpgyhwoszjx.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscmJhdHVqanFwZ3lod29zemp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3NzA1MDEsImV4cCI6MjA3MTM0NjUwMX0._PbuS4KSKv9__ew45Z577g5s5TBbbXHfCrHiT4O750o';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ====== CONSTS & MAPPERS ======
+    const TZ = 'America/Sao_Paulo';
+    const ROLES_ALL = ['Analista OACO','Analista OAGA','CH OACO','CH OAGA','CH AGA','Administrador','Visitante'];
+
+    const TIPOS = [
+      { value:'PDIR', label:'PDIR' },
+      { value:'INSCRICAO_ALTERACAO', label:'Inscrição/Alteração' },
+      { value:'EXPLORACAO', label:'Exploração' },
+      { value:'OPEA', label:'OPEA' }
+    ];
+
+    const STATUS = [
+      ['ANALISE_DOCUMENTAL','Análise Documental'],
+      ['ANALISE_TECNICA_PRELIMINAR','Análise Técnica Preliminar'],
+      ['ANALISE_TECNICA','Análise Técnica'],
+      ['PARECER_ATM','Parecer ATM'],
+      ['PARECER_DT','Parecer DT'],
+      ['NOTIFICACAO','Notificação'],
+      ['REVISAO_OACO','Revisão OACO'],
+      ['APROVACAO','Aprovação'],
+      ['SOBRESTADO_DOCUMENTAL','Sobrestado Documental'],
+      ['SOBRESTADO_TECNICO','Sobrestado Técnico'],
+      ['ANALISE_ICA','Análise ICA'],
+      ['PUBLICACAO_PORTARIA','Publicação de Portaria'],
+      ['CONCLUIDO','Concluído'],
+      ['REMOCAO_REBAIXAMENTO','Remoção/Rebaixamento'],
+      ['TERMINO_OBRA','Término de Obra']
+    ];
+
+    const statusLabel = (v)=> STATUS.find(([k])=>k===v)?.[1] || v;
+    const tipoLabel = (v)=> TIPOS.find(t=>t.value===v)?.label || v;
+
+    function fmtDateBR(date){
+      const d = new Date(date);
+      const opts = {timeZone: TZ, day:'2-digit', month:'2-digit', year:'2-digit'};
+      return new Intl.DateTimeFormat('pt-BR', opts).format(d);
+    }
+    function fmtTimeBR(date){
+      const d = new Date(date);
+      const opts = {timeZone: TZ, hour:'2-digit', minute:'2-digit', hour12:false};
+      return new Intl.DateTimeFormat('pt-BR', opts).format(d);
+    }
+    function fmtDateTimeBR(iso){ return `${fmtDateBR(iso)} ${fmtTimeBR(iso)}`; }
+
+    function parseDateBR(str){
+      // DD/MM/AA ou DD/MM/AAAA → ISO (YYYY-MM-DD)
+      const m = String(str||'').trim().match(/^(\\d{2})\\/(\\d{2})\\/(\\d{2,4})$/);
+      if(!m) return null;
+      let [_, dd, mm, yy] = m; // eslint-disable-line no-unused-vars
+      yy = yy.length===2 ? (Number(yy)>=70?`19${yy}`:`20${yy}`) : yy; // heurística simples
+      return `${yy}-${mm}-${dd}`;
+    }
+
+    function byId(id){ return document.getElementById(id); }
+
+    // ====== STATE ======
+    let session = null; let profile = null; let activeProfile = null; let canWrite = false; let cache = { processes: [] };
+
+    function checkPermissions(){
+      const allowed = ['Analista OACO','Analista OAGA','CH OACO','CH OAGA','CH AGA','Administrador'];
+      canWrite = Array.isArray(profile?.roles) && profile.roles.some(r=>allowed.includes(r)) && activeProfile && allowed.includes(activeProfile);
+      byId('createCard').style.display = canWrite ? 'block' : 'none';
+      byId('permWarning').style.display = canWrite ? 'none' : 'block';
+      byId('activeProfileLabel').textContent = activeProfile || 'Visitante';
+    }
+
+    // ====== AUTH FLOW ======
+    async function loadSession(){
+      const { data } = await sb.auth.getSession();
+      session = data.session;
+      if(session){ await onSignedIn(); } else { onSignedOut(); }
+    }
+
+    function onSignedOut(){
+      byId('authView').classList.remove('hidden');
+      byId('appView').classList.add('hidden');
+      byId('btnLogout').classList.add('hidden');
+      byId('profileSelect').classList.add('hidden');
+      byId('userInfo').textContent = '—';
+    }
+
+    async function onSignedIn(){
+      byId('authView').classList.add('hidden');
+      byId('appView').classList.remove('hidden');
+      byId('btnLogout').classList.remove('hidden');
+
+      const user = (await sb.auth.getUser()).data.user;
+      // Buscar/garantir profile
+      const { data: p } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+      if(!p){
+        // fallback (deve ser criado por trigger)
+        await sb.from('profiles').insert({ id:user.id, full_name:user.email, roles:['Visitante'] });
+        profile = { id:user.id, full_name:user.email, roles:['Visitante'] };
+      } else {
+        profile = p;
+      }
+
+      // Montar dropdown de perfis ativos
+      const sel = byId('profileSelect'); sel.innerHTML = '';
+      (profile.roles||['Visitante']).forEach(r=>{
+        const opt = document.createElement('option'); opt.value=r; opt.textContent=r; sel.appendChild(opt);
+      });
+      activeProfile = localStorage.getItem('activeProfile') || (profile.roles?.[0] || 'Visitante');
+      if(!(profile.roles||[]).includes(activeProfile)) activeProfile = profile.roles?.[0] || 'Visitante';
+      sel.value = activeProfile; sel.classList.remove('hidden');
+
+      byId('userInfo').textContent = `${profile.full_name || user.email} (${activeProfile})`;
+
+      checkPermissions();
+      renderTipoStatusOptions();
+      await loadProcesses();
+    }
+
+    // ====== RENDER HELPERS ======
+    function renderTipoStatusOptions(){
+      const tipo = byId('tipo'); const status = byId('status');
+      tipo.innerHTML = TIPOS.map(t=>`<option value="${t.value}">${t.label}</option>`).join('');
+      status.innerHTML = STATUS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+    }
+
+    function renderTable(){
+      const q = byId('search').value.trim().toLowerCase();
+      const rows = cache.processes.filter(p=>!q || p.nup.toLowerCase().includes(q));
+      byId('countBadge').textContent = `${rows.length} itens`;
+      const tbody = byId('procBody'); tbody.innerHTML='';
+      for(const p of rows){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="nowrap">${p.nup}</td>
+          <td>${tipoLabel(p.tipo)}</td>
+          <td>${fmtDateBR(p.entrada_regional)}</td>
+          <td>
+            <select data-id="${p.id}" class="statusSel" ${!canWrite?'disabled':''}>
+              ${STATUS.map(([v,l])=>`<option value="${v}" ${p.status===v?'selected':''}>${l}</option>`).join('')}
+            </select>
+          </td>
+          <td class="nowrap">${fmtDateTimeBR(p.updated_at)}</td>
+          <td class="right-align">
+            <div class="row" style="justify-content:flex-end">
+              <button class="btn" data-act="hist" data-id="${p.id}" data-nup="${p.nup}">Histórico</button>
+              ${canWrite?`<button class="btn primary" data-act="save" data-id="${p.id}">Salvar</button>`:''}
+            </div>
+          </td>`;
+        tbody.appendChild(tr);
+      }
+      // Bind row actions
+      tbody.querySelectorAll('button[data-act="save"]').forEach(btn=>btn.addEventListener('click', onSaveStatus));
+      tbody.querySelectorAll('button[data-act="hist"]').forEach(btn=>btn.addEventListener('click', onOpenHistory));
+    }
+
+    // ====== DATA I/O ======
+    async function loadProcesses(){
+      const { data, error } = await sb.from('processes')
+        .select('id,nup,tipo,entrada_regional,status,updated_at')
+        .order('updated_at', { ascending:false });
+      if(error){ alert('Erro ao carregar processos: '+error.message); return; }
+      cache.processes = data || [];
+      renderTable();
+    }
+
+    async function createProcess(){
+      if(!canWrite) return alert('Sem permissão para inserir.');
+      const nup = byId('nup').value.trim();
+      const tipo = byId('tipo').value;
+      const entradaBR = byId('entrada').value.trim();
+      const status = byId('status').value;
+      if(!nup) return alert('Informe o NUP.');
+      const entradaISO = parseDateBR(entradaBR); if(!entradaISO) return alert('Data inválida (use DD/MM/AA).');
+      const { error } = await sb.from('processes').insert({
+        nup, tipo, entrada_regional: entradaISO, status, last_used_profile: activeProfile
+      });
+      if(error){
+        alert('Erro ao inserir: '+error.message);
+      } else {
+        byId('nup').value=''; byId('entrada').value='';
+        await loadProcesses();
+      }
+    }
+
+    async function onSaveStatus(ev){
+      const id = ev.currentTarget.getAttribute('data-id');
+      const sel = document.querySelector(`select.statusSel[data-id="${id}"]`);
+      const newStatus = sel.value;
+      const { error } = await sb.from('processes').update({ status:newStatus, last_used_profile: activeProfile })
+        .eq('id', id);
+      if(error){ alert('Erro ao atualizar: '+error.message); }
+      else { await loadProcesses(); }
+    }
+
+    async function onOpenHistory(ev){
+      const id = ev.currentTarget.getAttribute('data-id');
+      const nup = ev.currentTarget.getAttribute('data-nup');
+      byId('historyTitle').textContent = `NUP ${nup}`;
+      const { data, error } = await sb.from('status_history')
+        .select('changed_at, old_status, new_status, used_profile, changed_by_name')
+        .eq('process_id', id).order('changed_at', { ascending:false });
+      if(error){ alert('Erro ao buscar histórico: '+error.message); return; }
+      const tb = byId('historyBody'); tb.innerHTML='';
+      for(const h of data){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="nowrap">${fmtDateTimeBR(h.changed_at)}</td>
+          <td>${h.old_status?statusLabel(h.old_status):'<span class="muted">—</span>'}</td>
+          <td>${statusLabel(h.new_status)}</td>
+          <td>${h.changed_by_name || '—'}</td>
+          <td>${h.used_profile}</td>`;
+        tb.appendChild(tr);
+      }
+      byId('historyModal').showModal();
+    }
+
+    // ====== EVENTS ======
+    byId('btnLogin').addEventListener('click', async()=>{
+      const email = byId('email').value.trim();
+      const password = byId('password').value;
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if(error) alert('Falha no login: '+error.message);
+      else await loadSession();
+    });
+
+    byId('btnSignup').addEventListener('click', async()=>{
+      const email = byId('email').value.trim();
+      const password = byId('password').value;
+      const { error } = await sb.auth.signUp({ email, password });
+      if(error) alert('Falha no cadastro: '+error.message);
+      else alert('Conta criada! Confira seu e-mail (se confirmação estiver ativa).');
+    });
+
+    byId('btnLogout').addEventListener('click', async()=>{
+      await sb.auth.signOut(); onSignedOut();
+    });
+
+    byId('btnCreate').addEventListener('click', createProcess);
+    byId('btnClear').addEventListener('click', ()=>{ byId('nup').value=''; byId('entrada').value=''; });
+    byId('search').addEventListener('input', renderTable);
+
+    byId('profileSelect').addEventListener('change', (e)=>{
+      activeProfile = e.target.value; localStorage.setItem('activeProfile', activeProfile);
+      byId('userInfo').textContent = `${profile.full_name || session?.user?.email} (${activeProfile})`;
+      checkPermissions(); renderTable();
+    });
+
+    sb.auth.onAuthStateChange((_evt)=>{ loadSession(); });
+
+    // init
+    (function init(){
+      // Render opções iniciais (antes do login, só para montar selects)
+      const tipo = byId('tipo'); const status = byId('status');
+      tipo.innerHTML = TIPOS.map(t=>`<option value="${t.value}">${t.label}</option>`).join('');
+      status.innerHTML = STATUS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+      loadSession();
+    })();
+  </script>
+</body>
+</html>
