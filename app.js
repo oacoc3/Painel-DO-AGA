@@ -156,20 +156,7 @@
     const searchForm = document.getElementById("search-nup-form");
     if (!searchForm) return;
 
-           const statusButtons = Array.from(document.querySelectorAll(".process-actions .btn"));
-      function updateStatusButtons(currentStatus){
-        statusButtons.forEach(btn => {
-          const st = btn.dataset.status;
-          if (!currentStatus || st === currentStatus){
-            btn.disabled = true;
-            btn.classList.remove("primary");
-          } else {
-            btn.disabled = false;
-            btn.classList.add("primary");
-          }
-        });
-      }
-      updateStatusButtons(null);
+      // Botões de status removidos da interface
 
       const el = (tag, className, text) => {
         const x = document.createElement(tag);
@@ -223,7 +210,6 @@
         const resultBox = document.getElementById("search-nup-result");
         if (!resultBox) return;
         resultBox.innerHTML = "";
-        updateStatusButtons(null);
          if (historySection) {
           historySection.style.display = "none";
           if (historyBox) historyBox.innerHTML = "";
@@ -246,7 +232,6 @@
             if (tipoEl) tipoEl.value = row.tipo || "";
             if (entradaEl) entradaEl.value = row.entrada_regional ? row.entrada_regional.slice(0,10) : "";
             if (statusEl) statusEl.value = row.status || "";
-            updateStatusButtons(row.status);
             loadHistory(processId);
           });
           resultBox.appendChild(tr);
@@ -319,13 +304,11 @@
         if (tipoEl) tipoEl.value = row.tipo || "";
         if (entradaEl) entradaEl.value = row.entrada_regional ? row.entrada_regional.slice(0,10) : "";
         if (statusEl) statusEl.value = row.status || "";
-        updateStatusButtons(row.status);
         loadHistory(row.id);
       } else {
         if (tipoEl) tipoEl.value = "";
         if (entradaEl) entradaEl.value = "";
         if (statusEl) statusEl.value = "";
-        updateStatusButtons(null);
         if (historySection) {
           historySection.style.display = "none";
           if (historyBox) historyBox.innerHTML = "";
