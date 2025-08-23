@@ -49,7 +49,7 @@ dialog::backdrop{background:rgba(0,0,0,.55);}
 body.shell{ display:block; overflow:hidden; padding:0; } /* evitar rolagem da tela na home */
 #view-home{
   display:grid;
-  grid-template-columns: 1fr 35vw;
+  grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr;
   gap:16px;
   height:100vh;
@@ -61,10 +61,13 @@ body.shell{ display:block; overflow:hidden; padding:0; } /* evitar rolagem da te
   width:min(420px, 92vw);
 }
 #view-home .card{
-  width:min(210px, 92vw);
+  width:210px;
+  height:100%;
+  align-self:stretch;
+  justify-self:start;
+  grid-column:1;
+  grid-row:2;
 }
-/* Caixa de login continua centralizada pela .login-page; caixa de busca fica alinhada ao topo à esquerda */
-#view-home .card{ align-self:start; justify-self:start; grid-column:1; grid-row:2; }
 
 /* Painel de listagem (direita, 35%): rolagem interna */
 .home-list{
