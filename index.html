@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Painel DO-AGA</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="shell" data-route="">
+    <!-- VIEW: LOGIN (mesmo markup do index.html original) -->
+    <section id="view-login" style="display:none;">
+      <main class="card">
+        <h1>Painel DO-AGA</h1>
+   <form id="login-form" class="vstack gap" autocomplete="on" novalidate>
+          <label class="field">
+            <span>E-mail</span>
+            <input type="email" id="email" autocomplete="username" required />
+          </label>
+          <label class="field">
+            <span>Senha</span>
+            <input
+              type="password"
+              id="password"
+              autocomplete="current-password"
+              required
+            />
+          </label>
+          <div class="row-between">
+            <label class="row gap">
+              <input type="checkbox" id="remember" />
+              <span class="status">Manter conectado</span>
+            </label>
+            <button class="btn primary" type="submit">Entrar</button>
+          </div>
+          <p id="login-msg" class="status"></p>
+        </form>
+        <!-- 🚫 Bloco de auto-registro removido -->
+      </main>
+    </section>
+    <!-- VIEW: HOME (mesmo markup do home.html original) -->
+    <section id="view-home" style="display:none;">
+      <header class="page-head">
+        <h1 class="title">Painel DO-AGA</h1>
+        <div class="row gap">
+          <p class="status" id="hello"></p>
+          <button class="btn" id="logout">Sair</button>
+        </div>
+      </header>
+      <main class="card">
+        <!-- Busca por NUP -->
+        <section class="vstack gap" id="search-nup-box">
+          <form id="search-nup-form" class="vstack gap" autocomplete="off">
+            <label class="field">
+              <span>NUP</span>
+              <input
+                type="text"
+                id="search-nup"
+                placeholder="Digite o NUP completo ou parcial"
+              />
+            </label>
+            <div class="row-end">
+              <button class="btn" type="button" id="clear-search">Limpar</button>
+              <button class="btn primary" type="submit">Buscar</button>
+            </div>
+            <p id="search-nup-msg" class="status"></p>
+          </form>
+        </section>
+      </main>
+      <div class="process-actions vstack gap">
+        <button class="btn" type="button" disabled data-status="Análise Documental">Análise Documental</button>
+        <button class="btn" type="button" disabled data-status="Análise Técnica Preliminar">Análise Técnica Preliminar</button>
+        <button class="btn" type="button" disabled data-status="Análise Técnica">Análise Técnica</button>
+        <button class="btn" type="button" disabled data-status="Notificação">Notificação</button>
+        <button class="btn" type="button" disabled data-status="Revisão OACO">Revisão OACO</button>
+        <button class="btn" type="button" disabled data-status="Aprovação">Aprovação</button>
+        <button class="btn" type="button" disabled data-status="Término de Obra">Término de Obra</button>
+        <button class="btn" type="button" disabled data-status="Remoção/Rebaixamento">Remoção/Rebaixamento</button>
+        <button class="btn" type="button" disabled data-status="Parecer ATM">Parecer ATM</button>
+        <button class="btn" type="button" disabled data-status="Parecer DT">Parecer DT</button>
+        <button class="btn" type="button" disabled data-status="Análise ICA">Análise ICA</button>
+        <button class="btn" type="button" disabled data-status="Sobrestado Documental">Sobrestado Documental</button>
+        <button class="btn" type="button" disabled data-status="Sobrestado Técnico">Sobrestado Técnico</button>
+        <button class="btn" type="button" disabled data-status="Concluído">Concluído</button>
+      </div>
+      <aside class="home-list">
+        <table class="process-table">
+          <thead>
+            <tr>
+              <th>NUP</th>
+              <th>Tipo</th>
+              <th>1ª Entrada no Regional</th>
+              <th>Status</th>
+              <th>Última Atualização</th>
+            </tr>
+          </thead>
+          <tbody id="search-nup-result"></tbody>
+        </table>
+        <section id="history-section" class="history-section" style="display:none;">
+          <h2>Histórico do Processo</h2>
+          <p id="history-msg" class="status"></p>
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Observação</th>
+                <th>Alterado em</th>
+                <th>Alterado por</th>
+              </tr>
+            </thead>
+            <tbody id="process-history"></tbody>
+          </table>
+        </section>
+      </aside>
+    </section>
+    <!-- Rodapé com versão/build, alinhado à esquerda -->
+    <footer class="foot status">
+      <span id="build-info" class="muted"></span>
+    </footer>
+      <script>
+        window.APP_ENV = {
+          SUPABASE_URL: "https://ylrbatujjqpgyhwoszjx.supabase.co",
+          SUPABASE_ANON_KEY:
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscmJhdHVqanFwZ3lod29zemp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3NzA1MDEsImV4cCI6MjA3MTM0NjUwMX0._PbuS4KSKv9__ew45Z577g5s5TBbbXHfCrHiT4O750o",
+          BUILD_ID: "dev",
+          BUILD_TIME: "2025-08-22 00:46:47",
+        };
+      </script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script defer src="app.js"></script>
+  </body>
+</html>
