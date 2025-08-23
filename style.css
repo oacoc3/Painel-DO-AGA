@@ -76,6 +76,7 @@ body.shell{ display:block; overflow:hidden; padding:0; } /* evitar rolagem da te
   overflow-x:hidden;
   border-left:1px solid var(--border);
   padding:0 16px 16px;
+  background:#101317;
 }
 
 
@@ -93,7 +94,7 @@ body.shell{ display:block; overflow:hidden; padding:0; } /* evitar rolagem da te
   position:sticky;
   top:0;
   z-index:2;
-  background:var(--bg);
+  background:#101317;
 }
 
 /* Histórico do processo */
