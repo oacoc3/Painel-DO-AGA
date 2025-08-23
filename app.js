@@ -237,14 +237,17 @@
           tr.appendChild(el("td", "", daysSince(row.entrada_regional)));
           tr.addEventListener("click", () => {
             const input = document.getElementById("search-nup");
-            const nup = row.nup || "";
+              const tipoEl = document.getElementById("process-tipo");
+            const entradaEl = document.getElementById("process-entrada");
+            const statusEl = document.getElementById("process-status");
+             const nup = row.nup || "";
             const processId = row.id;
             if (input) input.value = nup;
-            runSearch(nup).then(rows => {
-              const current = (rows && rows[0] && rows[0].status) || row.status;
-              updateStatusButtons(current);
-              loadHistory(processId);
-            });
+            if (tipoEl) tipoEl.value = row.tipo || "";
+            if (entradaEl) entradaEl.value = row.entrada_regional ? row.entrada_regional.slice(0,10) : "";
+            if (statusEl) statusEl.value = row.status || "";
+            updateStatusButtons(row.status);
+            loadHistory(processId);
           });
           resultBox.appendChild(tr);
         });
@@ -253,9 +256,15 @@
     async function fetchAllTramitando() {
       const msg = document.getElementById("search-nup-msg");
       const resultBox = document.getElementById("search-nup-result");
-      if (msg) msg.textContent = "";
+      const tipoEl = document.getElementById("process-tipo");
+      const entradaEl = document.getElementById("process-entrada");
+      const statusEl = document.getElementById("process-status");
+       if (msg) msg.textContent = "";
       if (resultBox) resultBox.innerHTML = "";
-      try {
+      if (tipoEl) tipoEl.value = "";
+      if (entradaEl) entradaEl.value = "";
+      if (statusEl) statusEl.value = "";
+       try {
         const { data, error } = await sb
           .from("processos").select("*")
           .neq("status", "Concluído")
@@ -300,16 +309,86 @@
       }
     }
 
-    // Submit de busca
+    async function searchProcess(q) {
+      const rows = await runSearch(q);
+      const tipoEl = document.getElementById("process-tipo");
+      const entradaEl = document.getElementById("process-entrada");
+      const statusEl = document.getElementById("process-status");
+      if (rows && rows[0]) {
+        const row = rows.find(r => r.nup === q) || rows[0];
+        if (tipoEl) tipoEl.value = row.tipo || "";
+        if (entradaEl) entradaEl.value = row.entrada_regional ? row.entrada_regional.slice(0,10) : "";
+        if (statusEl) statusEl.value = row.status || "";
+        updateStatusButtons(row.status);
+        loadHistory(row.id);
+      } else {
+        if (tipoEl) tipoEl.value = "";
+        if (entradaEl) entradaEl.value = "";
+        if (statusEl) statusEl.value = "";
+        updateStatusButtons(null);
+        if (historySection) {
+          historySection.style.display = "none";
+          if (historyBox) historyBox.innerHTML = "";
+          if (historyMsg) historyMsg.textContent = "";
+        }
+      }
+      return rows;
+    }
+
+    const searchBtn = document.getElementById("search-btn");
+    if (searchBtn) {
+      replaceAndBind(searchBtn, "click", async () => {
+        const input = document.getElementById("search-nup");
+        const q = ((input && input.value) || "").trim();
+        if (!q) {
+          await fetchAllTramitando();
+          return;
+        }
+        await searchProcess(q);
+      });
+    }
+
+    // Submit do formulário (salvar)
     replaceAndBind(searchForm, "submit", async (e) => {
       e.preventDefault();
       const input = document.getElementById("search-nup");
-      const q = ((input && input.value) || "").trim();
-      if (!q) {
-        await fetchAllTramitando();
+      const tipoEl = document.getElementById("process-tipo");
+      const entradaEl = document.getElementById("process-entrada");
+      const statusEl = document.getElementById("process-status");
+      const msg = document.getElementById("search-nup-msg");
+      const nup = ((input && input.value) || "").trim();
+      const tipo = ((tipoEl && tipoEl.value) || "").trim();
+      const entrada = entradaEl ? entradaEl.value : "";
+      const status = ((statusEl && statusEl.value) || "").trim();
+      if (msg) msg.textContent = "";
+      if (!nup) {
+        if (msg) msg.textContent = "NUP é obrigatório.";
         return;
       }
-      await runSearch(q);
+      try {
+        const { data: existingRows, error: selErr } = await sb
+          .from("processos").select("id").eq("nup", nup).limit(1);
+        if (selErr) throw selErr;
+        if (existingRows && existingRows.length > 0) {
+          const id = existingRows[0].id;
+          const { error: updErr } = await sb
+            .from("processos")
+            .update({ tipo, entrada_regional: entrada || null, status })
+            .eq("id", id);
+          if (updErr) throw updErr;
+          if (msg) msg.textContent = "Processo atualizado com sucesso.";
+        } else {
+          const { error: insErr } = await sb
+            .from("processos")
+            .insert([{ nup, tipo, entrada_regional: entrada || null, status }]);
+          if (insErr) throw insErr;
+          if (msg) msg.textContent = "Processo criado com sucesso.";
+        }
+        await searchProcess(nup);
+      } catch (err) {
+        console.error("Erro ao salvar processo:", err);
+        if (msg) msg.textContent = "Erro ao salvar processo.";
+      }
     });
     // Botão Limpar (bind após o clone do form)
     {
@@ -317,9 +396,15 @@
       if (clearBtn) {
         replaceAndBind(clearBtn, "click", async () => {
           const input = document.getElementById("search-nup");
-          const msg = document.getElementById("search-nup-msg");
+          const tipoEl = document.getElementById("process-tipo");
+          const entradaEl = document.getElementById("process-entrada");
+          const statusEl = document.getElementById("process-status");
+           const msg = document.getElementById("search-nup-msg");
           if (input) input.value = "";
-          if (msg) msg.textContent = "";
+          if (tipoEl) tipoEl.value = "";
+          if (entradaEl) entradaEl.value = "";
+          if (statusEl) statusEl.value = "";
+           if (msg) msg.textContent = "";
           await fetchAllTramitando();
           if (input) input.focus();
         });
@@ -329,7 +414,7 @@
 
     // Auto-carregar 'tramitando' se não houver termo na chegada na home
     const initialQ = (function(){var __el=document.getElementById("search-nup"); return ((__el && __el.value) || "").trim();})();
-    if (initialQ) runSearch(initialQ);
+    if (initialQ) searchProcess(initialQ);
     else fetchAllTramitando();
   }
 
